@@ -22,11 +22,15 @@
   font-family: "Inter", sans-serif;
 }
 
+/* UPDATED: centered text + space for absolute button */
 .fr-header {
+  position: relative;
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
   margin-bottom: 24px;
+  padding: 0 80px;   /* Leaves room so text doesn't collide with the button on smaller screens */
 }
 
 .fr-title {
@@ -43,14 +47,21 @@
   margin: 0;
 }
 
+/* UPDATED: bigger button, pinned to the right, vertically centered */
 .fr-refresh-btn {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+
   background: transparent;
   color: var(--text-secondary);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
-  padding: 8px 16px;
+
+  padding: 12px 24px;
   font-family: "JetBrains Mono", monospace;
-  font-size: 12px;
+  font-size: 14px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -58,6 +69,7 @@
 .fr-refresh-btn:hover {
   border-color: var(--accent);
   color: var(--text-primary);
+  background-color: rgba(255, 107, 0, 0.08);
 }
 
 /* ---------- Filter Bar ---------- */
@@ -308,8 +320,26 @@
 
 /* ---------- Responsive ---------- */
 @media (max-width: 640px) {
-  .fr-page { padding: 16px; }
-  .fr-header { flex-direction: column; gap: 16px; }
-  .fr-title { font-size: 24px; }
-  .fr-grid { grid-template-columns: 1fr; }
+  .fr-page {
+    padding: 16px;
+  }
+
+  /* Stack button under the title on mobile */
+  .fr-header {
+    padding: 0;
+  }
+
+  .fr-refresh-btn {
+    position: static;
+    transform: none;
+    margin-top: 16px;
+  }
+
+  .fr-title {
+    font-size: 24px;
+  }
+
+  .fr-grid {
+    grid-template-columns: 1fr;
+  }
 }
