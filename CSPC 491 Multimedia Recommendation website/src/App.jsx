@@ -7,9 +7,6 @@ function App() {
     <Routes>
       {/* Your Friends Recommendation page */}
       <Route path="/friends" element={<FriendSuggestions/>} />
-
-      {/* Home page redirect — so / doesn't show a blank screen */}
-      <Route path="/" element={<FriendSuggestions/>} />
     </Routes>
   );
 }
