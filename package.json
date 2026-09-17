@@ -4,9 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview"
+    "dev": "vite \"CSPC 491 Multimedia Recommendation website\"",
+    "build": "tsc -p \"CSPC 491 Multimedia Recommendation website/tsconfig.json\" && vite build \"CSPC 491 Multimedia Recommendation website\"",
+    "preview": "vite preview \"CSPC 491 Multimedia Recommendation website\""
   },
   "devDependencies": {
     "typescript": "~6.0.2",
