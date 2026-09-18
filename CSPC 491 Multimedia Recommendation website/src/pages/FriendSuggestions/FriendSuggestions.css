@@ -1,0 +1,345 @@
+/* src/pages/FriendSuggestions/FriendSuggestions.css */
+
+/* ---------- Design Tokens (matches your PDF Page 94) ---------- */
+:root {
+  --bg-primary: #121214;      /* Deep Slate */
+  --bg-content: #1e1e22;      /* Slate Grey */
+  --accent: #ff6b00;          /* Blaze Orange */
+  --text-primary: #f4f4f5;    /* Off-white */
+  --text-secondary: #a1a1aa;  /* Muted Grey */
+  --border-subtle: #2a2a2f;
+  --radius-md: 16px;
+  --radius-sm: 8px;
+  --gap: 8px;                 /* 8-point grid */
+}
+
+/* ---------- Page Shell ---------- */
+.fr-page {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  padding: 32px;
+  font-family: "Inter", sans-serif;
+}
+
+/* UPDATED: centered text + space for absolute button */
+.fr-header {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 24px;
+  padding: 0 80px;   /* Leaves room so text doesn't collide with the button on smaller screens */
+}
+
+.fr-title {
+  font-family: "Outfit", sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+  color: var(--text-primary);
+}
+
+.fr-subtitle {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* UPDATED: bigger button, pinned to the right, vertically centered */
+.fr-refresh-btn {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+
+  padding: 12px 24px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.fr-refresh-btn:hover {
+  border-color: var(--accent);
+  color: var(--text-primary);
+  background-color: rgba(255, 107, 0, 0.08);
+}
+
+/* ---------- Filter Bar ---------- */
+.fr-filter-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 16px;
+}
+
+.fr-filter-pill {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  padding: 6px 16px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.fr-filter-pill:hover {
+  color: var(--text-primary);
+  border-color: var(--accent);
+}
+
+.fr-filter-pill.active {
+  background-color: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+/* ---------- Grid ---------- */
+.fr-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 24px;
+}
+
+/* ---------- Friend Card ---------- */
+.fr-card {
+  background-color: var(--bg-content);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  border: 1px solid transparent;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.fr-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.fr-card-top {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.fr-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--border-subtle);
+}
+
+.fr-identity {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fr-username {
+  font-family: "Outfit", sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.fr-score-label {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  color: var(--accent);
+}
+
+/* Similarity bar */
+.fr-score-bar {
+  height: 4px;
+  width: 100%;
+  background-color: var(--border-subtle);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.fr-score-fill {
+  height: 100%;
+  background-color: var(--accent);
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+
+.fr-bio {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+  min-height: 40px;
+}
+
+/* Tags */
+.fr-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.fr-tag {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  padding: 4px 10px;
+  background-color: rgba(255, 107, 0, 0.1);
+  color: var(--accent);
+  border-radius: 999px;
+  border: 1px solid rgba(255, 107, 0, 0.3);
+}
+
+/* Buttons */
+.fr-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.fr-btn-primary,
+.fr-btn-secondary {
+  flex: 1;
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  font-family: "Inter", sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.fr-btn-primary {
+  background-color: var(--accent);
+  color: #fff;
+  border: none;
+}
+
+.fr-btn-primary:hover:not(:disabled) {
+  background-color: #ff8534;
+}
+
+.fr-btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.fr-btn-secondary {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+}
+
+.fr-btn-secondary:hover {
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
+
+/* ---------- Empty & Error States ---------- */
+.fr-empty,
+.fr-error {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 64px 24px;
+  color: var(--text-secondary);
+}
+
+.fr-empty h3 {
+  font-family: "Outfit", sans-serif;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.fr-error {
+  color: #ff5555;
+}
+
+/* ---------- Skeleton Loader ---------- */
+.fr-skeleton {
+  pointer-events: none;
+}
+
+.skeleton-block,
+.skeleton-line,
+.skeleton-pill,
+.skeleton-btn {
+  background: linear-gradient(
+    90deg,
+    #232327 25%,
+    #2c2c31 50%,
+    #232327 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  border-radius: var(--radius-sm);
+}
+
+.fr-skeleton .fr-avatar {
+  border: none;
+}
+
+.skeleton-line {
+  height: 12px;
+  margin-bottom: 8px;
+}
+
+.w-30 { width: 30%; }
+.w-60 { width: 60%; }
+.w-80 { width: 80%; }
+.w-100 { width: 100%; }
+
+.skeleton-pill {
+  display: inline-block;
+  height: 20px;
+  width: 60px;
+  border-radius: 999px;
+}
+
+.skeleton-btn {
+  flex: 1;
+  height: 38px;
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 640px) {
+  .fr-page {
+    padding: 16px;
+  }
+
+  /* Stack button under the title on mobile */
+  .fr-header {
+    padding: 0;
+  }
+
+  .fr-refresh-btn {
+    position: static;
+    transform: none;
+    margin-top: 16px;
+  }
+
+  .fr-title {
+    font-size: 24px;
+  }
+
+  .fr-grid {
+    grid-template-columns: 1fr;
+  }
+}
