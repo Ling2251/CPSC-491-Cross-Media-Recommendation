@@ -8,11 +8,20 @@ genuine recommendations without the entrapment of modern engagement algorithms.
 
 ```
 .
-├── frontend/    React + TypeScript + Vite app
-├── backend/     API (not started yet — planned for a later sprint)
-├── database/    PostgreSQL schema, migrations, and seed data
+├── CSPC 491 Multimedia Recommendation website/
+│   ├── src/          React app: Friend Suggestions, Media Tagging, and shared models
+│   ├── frontend/     Separate React app: user signup flow
+│   └── backend/      Node/Express API for the frontend/ signup app
+├── ai-backend/       Python/Flask recommendation service
+├── database/         PostgreSQL schema, migrations, seed data, and CRUD scripts
 └── README.md
 ```
+
+This repo currently holds a few parallel efforts from different feature teams that
+haven't been fully consolidated yet — see each subfolder's own README for what it
+covers. `database/` is shared, cross-team infrastructure: the `media`, `tag_taxonomy`,
+and `media_tags` tables it defines are meant to be consumed by whichever backend(s)
+end up serving the frontend.
 
 Design artifacts (database structure docs, ER diagrams, React component/data-flow
 plans, UI mockups) live in Google Docs; this repository holds what has actually
@@ -22,23 +31,36 @@ been implemented. Sprint planning and progress are tracked in Jira.
 
 ### Database
 
-See [`database/README.md`](database/README.md) for schema setup instructions.
+See [`database/README.md`](database/README.md) for schema setup instructions,
+and [`database/scripts/`](database/scripts) for the CRUD layer, migration
+runner, demo, and automated constraint tests.
 
-### Frontend
+### Main React app (Friend Suggestions, Media Tagging)
 
 ```bash
-cd frontend
 npm install
 npm run dev
 ```
 
-Run the test suite:
+This runs Vite against `CSPC 491 Multimedia Recommendation website/`. Routes:
+`/friends` (Friend Suggestions) and `/media` (Media Tagging preview).
+
+### Signup app
 
 ```bash
-cd frontend
-npm run test
+cd "CSPC 491 Multimedia Recommendation website/frontend"
+npm install
+npm run dev
 ```
 
-### Backend
+### Node/Express backend (signup app)
 
-Not implemented yet — see [`backend/README.md`](backend/README.md).
+```bash
+cd "CSPC 491 Multimedia Recommendation website/backend"
+npm install
+node server.js
+```
+
+### AI recommendation backend
+
+See [`ai-backend/README.md`](ai-backend/README.md).
