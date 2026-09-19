@@ -1,11 +1,14 @@
-import Signup from "./pages/Signup"
+// src/App.jsx
+import { Routes, Route } from "react-router-dom";
+import FriendSuggestions from "./pages/FriendSuggestions/FriendSuggestions";
 
 function App() {
   return (
-    <div>
-      <Signup />
-    </div>
-  )
+    <Routes>
+      {/* Your Friends Recommendation page */}
+      <Route path="/friends" element={<FriendSuggestions/>} />
+    </Routes>
+  );
 }
 
-export default App
+export default App;
