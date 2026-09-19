@@ -4,17 +4,12 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite \"CSPC 491 Multimedia Recommendation website\"",
-    "build": "tsc -p \"CSPC 491 Multimedia Recommendation website/tsconfig.json\" && vite build \"CSPC 491 Multimedia Recommendation website\"",
-    "preview": "vite preview \"CSPC 491 Multimedia Recommendation website\""
+    "dev": "cd \"CSPC 491 Multimedia Recommendation website/frontend\" && npm run dev",
+    "build": "cd \"CSPC 491 Multimedia Recommendation website/frontend\" && npm run build",
+    "preview": "cd \"CSPC 491 Multimedia Recommendation website/frontend\" && npm run preview"
   },
   "devDependencies": {
     "typescript": "~6.0.2",
     "vite": "^8.3.0"
-  },
-  "dependencies": {
-    "react": "^19.3.0",
-    "react-dom": "^19.3.0",
-    "react-router-dom": "^7.18.3"
   }
 }
