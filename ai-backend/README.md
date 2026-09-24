@@ -55,6 +55,39 @@ For verbose output:
 pytest -v
 ```
 
+## Continuous Integration
+
+This project uses GitHub Actions to automatically run the backend test suite on every push and pull request.
+
+### CI Workflow
+
+The CI workflow (`.github/workflows/ci.yml`) performs the following steps:
+
+1. **Trigger**: Runs on `push` to main/AI-Recommendation branches and on pull requests
+2. **Environment**: Sets up Python 3.12 on Ubuntu
+3. **Install**: Installs dependencies from `requirements.txt`
+4. **Test**: Runs the full test suite with `pytest ai-backend/tests -v`
+
+All 12 tests must pass before code can be merged.
+
+### Local Test Execution
+
+To run tests locally before pushing:
+
+```bash
+# Run all tests (quiet mode)
+pytest ai-backend/tests -q
+
+# Run with verbose output
+pytest ai-backend/tests -v
+
+# Run specific test file
+pytest ai-backend/tests/test_generator.py -v
+
+# Run with coverage
+pytest ai-backend/tests --cov=ai-backend/app
+```
+
 ## Data Generated for Sprint 1
 
 - **50 dummy users** with random genre/language preferences
