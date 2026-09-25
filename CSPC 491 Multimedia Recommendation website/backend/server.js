@@ -2,6 +2,8 @@ const express = require("express")
 const cors = require("cors")
 const pool = require("./db")
 const bcrypt = require("bcrypt")
+const jwt = require("jsonwebtoken")
+const JWT_SECRET = "development_secret"
 
 const app = express()
 const PORT = 3001
@@ -90,6 +92,70 @@ app.post("/api/auth/signup", async (req, res) => {
 
     res.status(500).json({
       message: "Could not create account"
+    })
+  }
+})
+
+app.post("/api/auth/login", async (req, res) => {
+  try {
+    const { email, password } = req.body
+
+    if (!email || !password) {
+      return res.status(400).json({
+        message: "Email and password are required"
+      })
+    }
+
+    const result = await pool.query(
+      "SELECT id, name, email, password_hash, account_state FROM users WHERE email = $1",
+      [email]
+    )
+
+    if (result.rows.length === 0) {
+      return res.status(401).json({
+        message: "Invalid email or password"
+      })
+    }
+
+    const user = result.rows[0]
+
+    const passwordMatches = await bcrypt.compare(
+      password,
+      user.password_hash
+    )
+
+    if (!passwordMatches) {
+      return res.status(401).json({
+        message: "Invalid email or password"
+      })
+    }
+
+    const token = jwt.sign(
+      {
+        userId: user.id,
+        email: user.email
+      },
+      JWT_SECRET,
+      {
+        expiresIn: "1h"
+      }
+    )
+
+    res.json({
+      message: "Login successful",
+      token,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        account_state: user.account_state
+      }
+    })
+  } catch (error) {
+    console.error(error)
+
+    res.status(500).json({
+      message: "Could not log in"
     })
   }
 })
