@@ -1,0 +1,73 @@
+name: Database CI
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'database/**'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'database/**'
+
+jobs:
+  test-schema:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: cross_media_recommendation
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: cross_media_recommendation
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install psql client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Apply migrations in order
+        run: |
+          for f in database/migrations/*.sql; do
+            echo "Applying $f"
+            psql -h localhost -U postgres -d cross_media_recommendation -f "$f"
+          done
+
+      - name: Load seed data
+        run: psql -h localhost -U postgres -d cross_media_recommendation -f database/seed/seed_initial_tags.sql
+
+      - name: Install script dependencies
+        working-directory: database/scripts
+        run: npm install
+
+      - name: Run schema constraint tests
+        working-directory: database/scripts
+        run: npm test
+
+      - name: Record build version
+        run: |
+          MIGRATION_COUNT=$(ls database/migrations/*.sql | wc -l)
+          echo "schema-v${MIGRATION_COUNT}.build.${GITHUB_RUN_NUMBER}" > database/schema/VERSION
+          cat database/schema/VERSION
