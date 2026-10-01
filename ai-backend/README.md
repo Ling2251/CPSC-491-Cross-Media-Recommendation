@@ -1,10 +1,12 @@
 # AI Recommendation Backend
 
-A FastAPI-based recommendation system with multi-source data collection. 
+A FastAPI-based recommendation system with multi-source data collection and user preference management.
 
 **Sprint 1** establishes the foundation with dummy data generation, validation, and a simple top-N baseline recommender.
 
 **Sprint 2** extends this with a public-data ingestion pipeline, collecting TV series and book data from public APIs without requiring authentication.
+
+**Sprint 3** adds user preference management with an onboarding flow, survey-based preference collection, and integration with the recommendation engine.
 
 ## Setup
 
@@ -223,6 +225,68 @@ pytest tests -v
 ```
 
 The Sprint 2 public-data tests mock external HTTP responses, so CI does not depend on TVMaze or Open Library being reachable during a test run.
+
+## Sprint 3: User Preference System & Onboarding
+
+Sprint 3 introduces a comprehensive preference management system for collecting user preferences through an intuitive onboarding flow.
+
+### Preference Schema
+
+Users define preferences with the following contract:
+
+```python
+PreferenceInput(
+    favorite_genres: List[str],        # At least one genre required
+    preferred_languages: List[str],    # At least one language required
+    content_types: List[str],          # Movies, TV series, books, podcasts
+    rating_threshold: float = 5.0,     # Minimum acceptable rating (0-10)
+    discovery_interest: bool = True    # Open to discovering new content
+)
+```
+
+### Onboarding Flow
+
+The onboarding system guides users through preference collection:
+
+1. **Welcome** - Brief introduction to the system
+2. **Survey** - Multi-question preference survey with various question types
+3. **Summary** - Review preferences before confirmation
+4. **Complete** - Preferences saved and recommendations ready
+
+### Survey System
+
+The system generates a 5-question survey covering:
+
+1. Favorite genres (multi-choice)
+2. Preferred languages (multi-choice)
+3. Content types (multi-choice)
+4. Minimum rating threshold (rating scale)
+5. Discovery interest (yes/no)
+
+### Preference Integration
+
+Saved preferences are integrated with the recommendation engine to:
+
+- Filter recommendations by user's preferred genres
+- Respect language preferences
+- Apply rating thresholds
+- Support discovery mode for unexpected recommendations
+
+### Testing
+
+Sprint 3 includes comprehensive test coverage:
+
+```bash
+pytest ai-backend/tests/test_preferences.py -v
+```
+
+Tests verify:
+- Preference validation and constraints
+- Preference CRUD operations
+- Onboarding flow state management
+- Survey generation
+- Onboarding completion
+- Preference updates and persistence
 
 ## Future Sprints
 
