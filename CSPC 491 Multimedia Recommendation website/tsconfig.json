@@ -22,10 +22,4 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-<<<<<<< Updated upstream
-  "include": ["src"]
 }
-=======
-  "include": ["src", "main.jsx"]
-}
->>>>>>> Stashed changes
