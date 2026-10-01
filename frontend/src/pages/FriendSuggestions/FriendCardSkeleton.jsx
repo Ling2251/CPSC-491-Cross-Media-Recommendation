@@ -1,6 +1,4 @@
 // src/pages/FriendSuggestions/FriendCardSkeleton.jsx
-import React from "react";
-
 const FriendCardSkeleton = () => (
   <article className="fr-card fr-skeleton">
     <div className="fr-card-top">

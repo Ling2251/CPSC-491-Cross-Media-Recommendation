@@ -1,5 +1,5 @@
 // src/pages/FriendSuggestions/FriendCard.jsx
-import React, { useState } from "react";
+import { useState } from "react";
 
 const FriendCard = ({ user }) => {
   const [requestState, setRequestState] = useState("idle"); // idle | pending | sent

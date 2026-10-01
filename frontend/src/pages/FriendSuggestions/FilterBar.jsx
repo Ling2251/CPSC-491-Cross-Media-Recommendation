@@ -1,6 +1,4 @@
 // src/pages/FriendSuggestions/FilterBar.jsx
-import React from "react";
-
 const FILTERS = [
   { key: "all", label: "All" },
   { key: "movies", label: "Movies" },

@@ -1,5 +1,5 @@
 // src/pages/FriendSuggestions/FriendSuggestions.jsx
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import FriendCard from "./FriendCard";
 import FriendCardSkeleton from "./FriendCardSkeleton";
 import FilterBar from "./FilterBar";
@@ -21,7 +21,8 @@ const FriendSuggestions = () => {
         await new Promise((r) => setTimeout(r, 800)); // simulate network
         setUsers(MOCK_USERS);
       } catch (err) {
-        setError("Could not load recommendations. Please try again.");
+        console.error("Failed to load friend suggestions:", err);
+        setError(true);
       } finally {
         setLoading(false);
       }
