@@ -48,6 +48,9 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci
 
+      - name: Run friendship tests
+        run: npm test
+
       - name: Show build version
         run: |
           echo "Build Number: ${{ github.run_number }}"

@@ -1,5 +1,8 @@
 {
   "dependencies": {
     "react-router-dom": "^7.18.3"
+  },
+  "devDependencies": {
+    "vitest": "^5.0.3"
   }
 }
