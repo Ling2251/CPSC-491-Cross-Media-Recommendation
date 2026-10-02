@@ -168,7 +168,7 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-          cache-dependency-path: backend/requirements.txt
+          # Remove the cache-dependency-path line if requirements.txt doesn't exist yet
 
 
       # -----------------------------------------------------
@@ -177,7 +177,9 @@ jobs:
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r backend/requirements.txt
+          if [ -f "backend/requirements.txt" ]; then
+            pip install -r backend/requirements.txt
+          fi
           pip install pytest
 
 
