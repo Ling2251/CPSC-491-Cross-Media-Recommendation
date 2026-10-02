@@ -1,27 +1,50 @@
+// src/pages/Friends/FriendsPage.jsx
+
 import React, {
   useEffect,
   useState,
 } from "react";
 
 import { friendshipService } from "../../services/friendshipservices";
-import { users } from "../../data/users";
+import {
+  canViewUserActivity,
+  getUserById,
+} from "../../services/privacyService";
 
 import FriendRequestCard from "./FriendRequestCard";
+
 import "../FriendSuggestions/FriendSuggestions.css";
 
 const FriendsPage = () => {
+  // Temporary logged-in user.
+  // Replace with authenticated user later.
   const currentUserId = 1;
 
-  const [friends, setFriends] = useState([]);
-  const [incomingRequests, setIncomingRequests] =
+  const [friends, setFriends] =
     useState([]);
-  const [outgoingRequests, setOutgoingRequests] =
-    useState([]);
-  const [message, setMessage] = useState("");
 
+  const [
+    incomingRequests,
+    setIncomingRequests,
+  ] = useState([]);
+
+  const [
+    outgoingRequests,
+    setOutgoingRequests,
+  ] = useState([]);
+
+  const [message, setMessage] =
+    useState("");
+
+  /**
+   * Reload all friendship information from
+   * the temporary FriendshipService.
+   */
   const refreshFriendships = () => {
     setFriends(
-      friendshipService.getFriends(currentUserId)
+      friendshipService.getFriends(
+        currentUserId
+      )
     );
 
     setIncomingRequests(
@@ -41,9 +64,14 @@ const FriendsPage = () => {
     refreshFriendships();
   }, []);
 
+  /**
+   * Accept incoming friendship.
+   */
   const handleAccept = (requestId) => {
     const result =
-      friendshipService.acceptRequest(requestId);
+      friendshipService.acceptRequest(
+        requestId
+      );
 
     setMessage(result.message);
 
@@ -52,9 +80,14 @@ const FriendsPage = () => {
     }
   };
 
+  /**
+   * Decline incoming friendship.
+   */
   const handleDecline = (requestId) => {
     const result =
-      friendshipService.declineRequest(requestId);
+      friendshipService.declineRequest(
+        requestId
+      );
 
     setMessage(result.message);
 
@@ -63,9 +96,14 @@ const FriendsPage = () => {
     }
   };
 
+  /**
+   * Remove an accepted friendship.
+   */
   const handleRemove = (friendshipId) => {
     const result =
-      friendshipService.removeFriend(friendshipId);
+      friendshipService.removeFriend(
+        friendshipId
+      );
 
     setMessage(result.message);
 
@@ -73,12 +111,6 @@ const FriendsPage = () => {
       refreshFriendships();
     }
   };
-
-  const getUser = (userId) =>
-    users.find(
-      (user) =>
-        Number(user.id) === Number(userId)
-    );
 
   return (
     <div className="fr-page">
@@ -100,6 +132,10 @@ const FriendsPage = () => {
         </div>
       )}
 
+      {/* =========================
+          INCOMING REQUESTS
+          ========================= */}
+
       <section>
         <h2 className="fr-title">
           Friend Requests
@@ -108,23 +144,33 @@ const FriendsPage = () => {
         <div className="fr-grid">
           {incomingRequests.length === 0 ? (
             <div className="fr-empty">
-              <h3>No pending requests</h3>
+              <h3>
+                No pending requests
+              </h3>
+
               <p>
-                You do not have any incoming friend requests.
+                You do not have any incoming
+                friend requests.
               </p>
             </div>
           ) : (
-            incomingRequests.map((request) => (
-              <FriendRequestCard
-                key={request.id}
-                request={request}
-                onAccept={handleAccept}
-                onDecline={handleDecline}
-              />
-            ))
+            incomingRequests.map(
+              (request) => (
+                <FriendRequestCard
+                  key={request.id}
+                  request={request}
+                  onAccept={handleAccept}
+                  onDecline={handleDecline}
+                />
+              )
+            )
           )}
         </div>
       </section>
+
+      {/* =========================
+          ACCEPTED FRIENDS
+          ========================= */}
 
       <section>
         <h2 className="fr-title">
@@ -135,19 +181,35 @@ const FriendsPage = () => {
           {friends.length === 0 ? (
             <div className="fr-empty">
               <h3>No friends yet</h3>
+
               <p>
-                Add someone from Friend Suggestions to get started.
+                Accept a friend request to
+                add someone to your friends.
               </p>
             </div>
           ) : (
             friends.map((friendship) => {
+              /**
+               * Figure out which user in the
+               * relationship is the other person.
+               */
               const friendId =
                 friendshipService.getOtherUserId(
                   friendship,
                   currentUserId
                 );
 
-              const friend = getUser(friendId);
+              const friend =
+                getUserById(friendId);
+
+              /**
+               * Privacy check.
+               */
+              const canViewActivity =
+                canViewUserActivity(
+                  currentUserId,
+                  friendId
+                );
 
               return (
                 <article
@@ -157,8 +219,12 @@ const FriendsPage = () => {
                   <div className="fr-card-top">
                     {friend?.profile_pic && (
                       <img
-                        src={friend.profile_pic}
-                        alt={friend.username}
+                        src={
+                          friend.profile_pic
+                        }
+                        alt={
+                          friend.username
+                        }
                         className="fr-avatar"
                       />
                     )}
@@ -181,12 +247,39 @@ const FriendsPage = () => {
                     </p>
                   )}
 
+                  {/* Privacy indicator */}
+
+                  <div className="fr-tags">
+                    {canViewActivity ? (
+                      <span className="fr-tag">
+                        Public Activity
+                      </span>
+                    ) : (
+                      <span className="fr-tag">
+                        Private Activity
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Explain what privacy means */}
+
+                  {!canViewActivity && (
+                    <p className="fr-subtitle">
+                      This user's activity is private.
+                      Their ratings, reviews, and
+                      watchlist activity will not
+                      appear in your activity feed.
+                    </p>
+                  )}
+
                   <div className="fr-actions">
                     <button
                       type="button"
                       className="fr-btn-secondary"
                       onClick={() =>
-                        handleRemove(friendship.id)
+                        handleRemove(
+                          friendship.id
+                        )
                       }
                     >
                       Remove Friend
@@ -199,6 +292,10 @@ const FriendsPage = () => {
         </div>
       </section>
 
+      {/* =========================
+          OUTGOING REQUESTS
+          ========================= */}
+
       <section>
         <h2 className="fr-title">
           Sent Requests
@@ -208,48 +305,51 @@ const FriendsPage = () => {
           {outgoingRequests.length === 0 ? (
             <div className="fr-empty">
               <p>
-                You have no pending outgoing requests.
+                You have no pending outgoing
+                requests.
               </p>
             </div>
           ) : (
-            outgoingRequests.map((request) => {
-              const receiver =
-                getUser(request.receiverId);
+            outgoingRequests.map(
+              (request) => {
+                const receiver =
+                  getUserById(
+                    request.receiverId
+                  );
 
-              return (
-                <article
-                  key={request.id}
-                  className="fr-card"
-                >
-                  <div className="fr-card-top">
-                    {receiver?.profile_pic && (
-                      <img
-                        src={receiver.profile_pic}
-                        alt={receiver.username}
-                        className="fr-avatar"
-                      />
-                    )}
+                return (
+                  <article
+                    key={request.id}
+                    className="fr-card"
+                  >
+                    <div className="fr-card-top">
+                      {receiver?.profile_pic && (
+                        <img
+                          src={
+                            receiver.profile_pic
+                          }
+                          alt={
+                            receiver.username
+                          }
+                          className="fr-avatar"
+                        />
+                      )}
 
-                    <div className="fr-identity">
-                      <h3 className="fr-username">
-                        {receiver?.username ??
-                          `User #${request.receiverId}`}
-                      </h3>
+                      <div className="fr-identity">
+                        <h3 className="fr-username">
+                          {receiver?.username ??
+                            `User #${request.receiverId}`}
+                        </h3>
 
-                      <span className="fr-score-label">
-                        Request Pending
-                      </span>
+                        <span className="fr-score-label">
+                          Request Pending
+                        </span>
+                      </div>
                     </div>
-                  </div>
-
-                  {receiver?.bio && (
-                    <p className="fr-bio">
-                      {receiver.bio}
-                    </p>
-                  )}
-                </article>
-              );
-            })
+                  </article>
+                );
+              }
+            )
           )}
         </div>
       </section>

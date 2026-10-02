@@ -1,7 +1,7 @@
 // src/data/users.js
 
-// Temporary mock user data for Social Interactivity.
-// Replace with SQL/backend data once the database is implemented.
+// Temporary mock user data.
+// Replace with backend/database data once PostgreSQL is implemented.
 
 export const users = [
   {
@@ -12,7 +12,11 @@ export const users = [
     similarity_score: 0.92,
     shared_tags: ["sci-fi", "thriller", "cyberpunk"],
     media_types: ["movies", "books"],
+
+    // false = friends may see activity
+    activityPrivate: false,
   },
+
   {
     id: 2,
     username: "CrazyDave777",
@@ -21,7 +25,11 @@ export const users = [
     similarity_score: 0.71,
     shared_tags: ["action", "adventure"],
     media_types: ["movies"],
+
+    // true = activity should not be shown to other users
+    activityPrivate: true,
   },
+
   {
     id: 3,
     username: "LoFiLuna",
@@ -30,7 +38,10 @@ export const users = [
     similarity_score: 0.65,
     shared_tags: ["jazz", "chill", "drama"],
     media_types: ["music", "books"],
+
+    activityPrivate: false,
   },
+
   {
     id: 4,
     username: "BookishBen",
@@ -39,5 +50,7 @@ export const users = [
     similarity_score: 0.58,
     shared_tags: ["fantasy", "sci-fi"],
     media_types: ["books"],
+
+    activityPrivate: true,
   },
 ];
