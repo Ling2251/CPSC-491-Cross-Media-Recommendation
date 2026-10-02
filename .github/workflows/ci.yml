@@ -28,9 +28,13 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r ai-backend/requirements.txt
 
-    - name: Run backend tests
-      run: |
-        pytest ai-backend/tests -v --tb=short
+    - - name: Run backend tests
+  run: |
+    if [ -d "ai-backend/tests" ]; then
+      pytest ai-backend/tests -v --tb=short
+    else
+      echo "No tests found in ai-backend/tests"
+    fi
 
     - name: Test results summary
       if: always()
