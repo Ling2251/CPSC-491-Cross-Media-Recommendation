@@ -117,3 +117,59 @@ def test_preference_summary():
     assert summary["favorite_genres"] == ["Comedy"]
     assert len(summary["preferred_languages"]) == 2
     assert summary["rating_threshold"] == 6.5
+
+@pytest.mark.parametrize("threshold", [0.0, 10.0])
+def test_rating_threshold_accepts_bounds(threshold):
+    prefs = PreferenceInput(
+        favorite_genres=["Drama"],
+        preferred_languages=["English"],
+        rating_threshold=threshold,
+    )
+    assert prefs.rating_threshold == threshold
+
+@pytest.mark.parametrize("threshold", [-0.1, 10.1])
+def test_rating_threshold_rejects_outside_bounds(threshold):
+    with pytest.raises(ValueError):
+        PreferenceInput(
+            favorite_genres=["Drama"],
+            preferred_languages=["English"],
+            rating_threshold=threshold,
+        )
+
+def test_favorite_genres_max_ten_accepted():
+    genres = [f"Genre{i}" for i in range(10)]
+    prefs = PreferenceInput(favorite_genres=genres, preferred_languages=["English"])
+    assert len(prefs.favorite_genres) == 10
+
+def test_favorite_genres_over_ten_rejected():
+    genres = [f"Genre{i}" for i in range(11)]
+    with pytest.raises(ValueError):
+        PreferenceInput(favorite_genres=genres, preferred_languages=["English"])
+
+def test_preferred_languages_empty_rejected():
+    with pytest.raises(ValueError):
+        PreferenceInput(favorite_genres=["Drama"], preferred_languages=[])
+
+def test_preferred_languages_max_five_accepted():
+    languages = ["English", "Spanish", "French", "German", "Japanese"]
+    prefs = PreferenceInput(favorite_genres=["Drama"], preferred_languages=languages)
+    assert len(prefs.preferred_languages) == 5
+
+def test_preferred_languages_over_five_rejected():
+    languages = ["English", "Spanish", "French", "German", "Japanese", "Korean"]
+    with pytest.raises(ValueError):
+        PreferenceInput(favorite_genres=["Drama"], preferred_languages=languages)
+
+def test_onboarding_repeated_completion_overwrites_preferences():
+    manager = PreferenceManager()
+    flow = OnboardingFlow(manager)
+
+    first = PreferenceInput(favorite_genres=["Action"], preferred_languages=["English"])
+    second = PreferenceInput(favorite_genres=["Romance"], preferred_languages=["French"])
+
+    assert flow.process_onboarding_complete(user_id=7, preferences=first)["status"] == "success"
+    assert flow.process_onboarding_complete(user_id=7, preferences=second)["status"] == "success"
+
+    saved = manager.get_preferences(user_id=7)
+    assert saved.favorite_genres == ["Romance"]
+    assert saved.preferred_languages == ["French"]
