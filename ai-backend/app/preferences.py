@@ -1,3 +1,4 @@
+from typing import Any
 from typing import List, Optional
 from pydantic import BaseModel, Field
 
@@ -28,5 +29,5 @@ class SurveyResponse(BaseModel):
     """User's survey responses."""
     user_id: int
     question_id: str
-    answer: any
+    answer: Any
     timestamp: str

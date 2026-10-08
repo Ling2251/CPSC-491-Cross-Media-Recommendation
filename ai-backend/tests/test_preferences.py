@@ -1,5 +1,5 @@
 import pytest
-from app.models.preferences import PreferenceInput, PreferenceResponse, SurveyQuestion
+from app.preferences import PreferenceInput, PreferenceResponse, SurveyQuestion
 from app.services.preference_manager import PreferenceManager
 from app.services.onboarding import OnboardingFlow
 

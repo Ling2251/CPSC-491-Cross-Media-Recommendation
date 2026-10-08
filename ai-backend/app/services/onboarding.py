@@ -1,5 +1,5 @@
 from typing import List
-from app.models.preferences import PreferenceInput, SurveyQuestion
+from app.preferences import PreferenceInput, SurveyQuestion
 from app.services.preference_manager import PreferenceManager
 
 class OnboardingFlow:

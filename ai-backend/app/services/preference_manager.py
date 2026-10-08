@@ -1,5 +1,5 @@
 from typing import Dict, List, Optional
-from app.models.preferences import PreferenceInput, PreferenceResponse, SurveyQuestion, SurveyResponse
+from app.preferences import PreferenceInput, PreferenceResponse, SurveyQuestion, SurveyResponse
 from app.services.recommender import BaselineRecommender
 
 class PreferenceManager:
