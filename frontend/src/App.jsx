@@ -1,14 +1,14 @@
-// src/App.jsx
 import { Routes, Route } from "react-router-dom";
-import FriendSuggestions from "./pages/FriendSuggestions/FriendSuggestions";
-import Signup from "./pages/Signup";
+
+import FriendsPage from "./pages/Friends/FriendsPage";
 
 function App() {
   return (
     <Routes>
-      {/* Your Friends Recommendation page */}
-      <Route path="/friends" element={<FriendSuggestions/>} />
-      <Route path="/signup" element={<Signup />} />
+      <Route
+        path="/manage-friends"
+        element={<FriendsPage />}
+      />
     </Routes>
   );
 }

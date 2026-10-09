@@ -1,16 +1,26 @@
-// src/pages/FriendSuggestions/FriendCard.jsx
+
 import { useState } from "react";
+import { friendshipService } from "../../services/friendshipservices";
 
 const FriendCard = ({ user }) => {
-  const [requestState, setRequestState] = useState("idle"); // idle | pending | sent
+  const currentUserId = 1;
 
-  const handleAddFriend = async () => {
-    setRequestState("pending");
-    try {
-      // await api.post('/friends/request', { target_user_id: user.id });
-      await new Promise((r) => setTimeout(r, 500)); // mock
+  const [requestState, setRequestState] = useState("idle");
+  const [message, setMessage] = useState("");
+
+  const handleAddFriend = () => {
+    setMessage("");
+
+    const result = friendshipService.sendRequest(
+      currentUserId,
+      Number(user.id)
+    );
+
+    setMessage(result.message);
+
+    if (result.success) {
       setRequestState("sent");
-    } catch {
+    } else {
       setRequestState("idle");
     }
   };
@@ -19,33 +29,35 @@ const FriendCard = ({ user }) => {
 
   return (
     <article className="fr-card">
-      {/* Top row: avatar + name */}
       <div className="fr-card-top">
         <img
           src={user.profile_pic}
           alt={user.username}
           className="fr-avatar"
         />
+
         <div className="fr-identity">
-          <h3 className="fr-username">{user.username}</h3>
+          <h3 className="fr-username">
+            {user.username}
+          </h3>
+
           <span className="fr-score-label">
             {scorePct}% match
           </span>
         </div>
       </div>
 
-      {/* Similarity bar */}
       <div className="fr-score-bar">
         <div
           className="fr-score-fill"
-          style={{ width: `${scorePct}%` }}
+          style={{
+            width: `${scorePct}%`,
+          }}
         />
       </div>
 
-      {/* Bio */}
       <p className="fr-bio">{user.bio}</p>
 
-      {/* Shared tags */}
       <div className="fr-tags">
         {user.shared_tags.slice(0, 4).map((tag) => (
           <span key={tag} className="fr-tag">
@@ -54,19 +66,31 @@ const FriendCard = ({ user }) => {
         ))}
       </div>
 
-      {/* Action buttons */}
       <div className="fr-actions">
-        <button className="fr-btn-secondary">View Profile</button>
         <button
+          type="button"
+          className="fr-btn-secondary"
+        >
+          View Profile
+        </button>
+
+        <button
+          type="button"
           className="fr-btn-primary"
           onClick={handleAddFriend}
-          disabled={requestState !== "idle"}
+          disabled={requestState === "sent"}
         >
-          {requestState === "idle" && "Add Friend"}
-          {requestState === "pending" && "Sending…"}
-          {requestState === "sent" && "Request Sent ✓"}
+          {requestState === "sent"
+            ? "Request Sent ✓"
+            : "Add Friend"}
         </button>
       </div>
+
+      {message && (
+        <p className="fr-subtitle" role="status">
+          {message}
+        </p>
+      )}
     </article>
   );
 };
