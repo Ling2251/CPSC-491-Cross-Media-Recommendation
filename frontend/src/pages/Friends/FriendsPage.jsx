@@ -10,8 +10,6 @@ import {
 
 import FriendRequestCard from "./FriendRequestCard";
 
-import "../FriendSuggestions/FriendSuggestions.css";
-
 const FriendsPage = () => {
   // Temporary logged-in user.
   // Replace with authenticated user later.
