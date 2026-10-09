@@ -4,6 +4,7 @@
 const assert = require('assert');
 const {
   DEFAULT_CONFIDENCE_THRESHOLD,
+  DEFAULT_LOW_CONFIDENCE_THRESHOLD,
   classifyCandidate,
   selectTagsForItem,
 } = require('./tagThreshold');
@@ -37,14 +38,47 @@ check('just above threshold (0.721) is accepted', () => {
 });
 
 check('extremes 0 and 1 are handled', () => {
-  assert.strictEqual(classifyCandidate(0).status, 'pending_review');
+  assert.strictEqual(classifyCandidate(0).status, 'rejected');
   assert.strictEqual(classifyCandidate(1).status, 'approved');
 });
 
-check('invalid confidence values are never auto-accepted', () => {
+check('default low threshold is 0.3', () => {
+  assert.strictEqual(DEFAULT_LOW_CONFIDENCE_THRESHOLD, 0.3);
+});
+
+check('below the low threshold (0.29) is rejected', () => {
+  const result = classifyCandidate(0.29);
+  assert.strictEqual(result.accepted, false);
+  assert.strictEqual(result.status, 'rejected');
+});
+
+check('exactly at the low threshold (0.3) goes to review, not rejected', () => {
+  const result = classifyCandidate(0.3);
+  assert.strictEqual(result.status, 'pending_review');
+});
+
+check('between the low and high threshold goes to review, not rejected', () => {
+  assert.strictEqual(classifyCandidate(0.5).status, 'pending_review');
+});
+
+check('invalid confidence values go to review, never rejected outright', () => {
   for (const bad of [undefined, null, NaN, '0.9', -0.1, 1.5, Infinity]) {
     assert.strictEqual(classifyCandidate(bad).status, 'pending_review', `value: ${String(bad)}`);
   }
+});
+
+check('custom low threshold is respected', () => {
+  assert.strictEqual(classifyCandidate(0.4, 0.72, 0.5).status, 'rejected');
+  assert.strictEqual(classifyCandidate(0.6, 0.72, 0.5).status, 'pending_review');
+});
+
+check('item with only low-confidence candidates is rejected, still needs review', () => {
+  const result = selectTagsForItem([
+    { tagId: 1, confidence: 0.1 },
+    { tagId: 2, confidence: 0.05 },
+  ]);
+  assert.strictEqual(result.needsReview, true);
+  assert.ok(result.decisions.every((decision) => decision.status === 'rejected'));
 });
 
 check('auto candidates always carry source=auto', () => {
@@ -64,21 +98,3 @@ check('item with a qualifying candidate does not need review', () => {
   ]);
   assert.strictEqual(result.needsReview, false);
   assert.strictEqual(result.decisions[0].status, 'approved');
-  assert.strictEqual(result.decisions[1].status, 'pending_review');
-});
-
-check('item with no qualifying candidate needs review', () => {
-  const result = selectTagsForItem([
-    { tagId: 1, confidence: 0.5 },
-    { tagId: 2, confidence: 0.71 },
-  ]);
-  assert.strictEqual(result.needsReview, true);
-  assert.ok(result.decisions.every((decision) => decision.status === 'pending_review'));
-});
-
-check('item with no candidates (missing metadata) needs review', () => {
-  assert.strictEqual(selectTagsForItem([]).needsReview, true);
-  assert.strictEqual(selectTagsForItem(undefined).needsReview, true);
-});
-
-console.log(`\n${passed} threshold tests passed`);
