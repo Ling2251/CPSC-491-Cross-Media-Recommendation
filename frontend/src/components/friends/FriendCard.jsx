@@ -1,5 +1,7 @@
 import { friendshipService } from "../../services/friendshipservices";
 
+import { useState } from "react";
+
 const FriendCard = ({ user }) => {
   const [requestState, setRequestState] = useState("idle");
   const [message, setMessage] = useState("");
