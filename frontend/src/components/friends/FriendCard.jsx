@@ -1,4 +1,3 @@
-import React, { useState } from "react";
 import { friendshipService } from "../../services/friendshipservices";
 
 const FriendCard = ({ user }) => {
