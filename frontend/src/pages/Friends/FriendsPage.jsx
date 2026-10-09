@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { friendshipService } from "../../services/friendshipservices";
+import { friendshipService } from "../../services/friendshipService.js";
 import {
   canViewUserActivity,
   getUserById,
