@@ -2,9 +2,17 @@ import { friendshipService } from "../../services/friendshipservices";
 
 import { useState } from "react";
 
-const FriendCard = ({ user }) => {
-  const [requestState, setRequestState] = useState("idle");
-  const [message, setMessage] = useState("");
+const [friends, setFriends] = useState(() =>
+  friendshipService.getFriends(currentUserId)
+);
+
+const [incomingRequests, setIncomingRequests] = useState(() =>
+  friendshipService.getIncomingRequests(currentUserId)
+);
+
+const [outgoingRequests, setOutgoingRequests] = useState(() =>
+  friendshipService.getOutgoingRequests(currentUserId)
+);
 
   // Temporary current user
   const currentUserId = 1;
@@ -98,6 +106,5 @@ const FriendCard = ({ user }) => {
       )}
     </article>
   );
-};
 
 export default FriendCard;
