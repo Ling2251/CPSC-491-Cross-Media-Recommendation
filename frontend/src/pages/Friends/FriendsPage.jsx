@@ -1,6 +1,6 @@
 // src/pages/Friends/FriendsPage.jsx
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { friendshipService } from "../../services/friendshipservices";
 import {
@@ -17,18 +17,19 @@ const FriendsPage = () => {
   // Replace with authenticated user later.
   const currentUserId = 1;
 
-  const [friends, setFriends] =
-    useState([]);
+  
+const [friends, setFriends] = useState(() =>
+  friendshipService.getFriends(currentUserId)
+);
 
-  const [
-    incomingRequests,
-    setIncomingRequests,
-  ] = useState([]);
+const [incomingRequests, setIncomingRequests] = useState(() =>
+  friendshipService.getIncomingRequests(currentUserId)
+);
 
-  const [
-    outgoingRequests,
-    setOutgoingRequests,
-  ] = useState([]);
+const [outgoingRequests, setOutgoingRequests] = useState(() =>
+  friendshipService.getOutgoingRequests(currentUserId)
+);
+
 
   const [message, setMessage] =
     useState("");
@@ -56,10 +57,6 @@ const FriendsPage = () => {
       )
     );
   };
-
-  useEffect(() => {
-    refreshFriendships();
-  }, []);
 
   /**
    * Accept incoming friendship.

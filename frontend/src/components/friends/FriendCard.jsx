@@ -1,24 +1,14 @@
-import { friendshipService } from "../../services/friendshipservices";
 
 import { useState } from "react";
+import { friendshipService } from "../../services/friendshipservices";
 
-const [friends, setFriends] = useState(() =>
-  friendshipService.getFriends(currentUserId)
-);
-
-const [incomingRequests, setIncomingRequests] = useState(() =>
-  friendshipService.getIncomingRequests(currentUserId)
-);
-
-const [outgoingRequests, setOutgoingRequests] = useState(() =>
-  friendshipService.getOutgoingRequests(currentUserId)
-);
-
-  // Temporary current user
+const FriendCard = ({ user }) => {
   const currentUserId = 1;
 
+  const [requestState, setRequestState] = useState("idle");
+  const [message, setMessage] = useState("");
+
   const handleAddFriend = () => {
-    setRequestState("pending");
     setMessage("");
 
     const result = friendshipService.sendRequest(
@@ -66,45 +56,43 @@ const [outgoingRequests, setOutgoingRequests] = useState(() =>
         />
       </div>
 
-      <p className="fr-bio">
-        {user.bio}
-      </p>
+      <p className="fr-bio">{user.bio}</p>
 
       <div className="fr-tags">
-        {user.shared_tags
-          .slice(0, 4)
-          .map((tag) => (
-            <span
-              key={tag}
-              className="fr-tag"
-            >
-              {tag}
-            </span>
-          ))}
+        {user.shared_tags.slice(0, 4).map((tag) => (
+          <span key={tag} className="fr-tag">
+            {tag}
+          </span>
+        ))}
       </div>
 
       <div className="fr-actions">
-        <button className="fr-btn-secondary">
+        <button
+          type="button"
+          className="fr-btn-secondary"
+        >
           View Profile
         </button>
 
         <button
+          type="button"
           className="fr-btn-primary"
           onClick={handleAddFriend}
-          disabled={requestState !== "idle"}
+          disabled={requestState === "sent"}
         >
-          {requestState === "idle" && "Add Friend"}
-          {requestState === "pending" && "Sending..."}
-          {requestState === "sent" && "Request Sent ✓"}
+          {requestState === "sent"
+            ? "Request Sent ✓"
+            : "Add Friend"}
         </button>
       </div>
 
       {message && (
-        <p className="fr-subtitle">
+        <p className="fr-subtitle" role="status">
           {message}
         </p>
       )}
     </article>
   );
+};
 
 export default FriendCard;
