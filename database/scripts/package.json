@@ -1,0 +1,15 @@
+{
+  "name": "cross-media-db-scripts",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "migrate": "node migrate.js",
+    "demo": "node demo.js",
+    "test": "node test-schema.js",
+    "test:tmdb": "node test-tmdb-adapter.js",
+    "ingest:tmdb": "node ingest-tmdb.js"
+},
+  "dependencies": {
+    "pg": "^8.13.1"
+  }
+}
