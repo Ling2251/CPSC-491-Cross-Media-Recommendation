@@ -6,11 +6,6 @@ function App() {
   return (
     <Routes>
       <Route
-        path="/friends"
-        element={<FriendSuggestions />}
-      />
-
-      <Route
         path="/manage-friends"
         element={<FriendsPage />}
       />
