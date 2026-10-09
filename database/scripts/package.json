@@ -7,7 +7,7 @@
     "demo": "node demo.js",
     "test": "node test-schema.js",
     "test:tmdb": "node test-tmdb-adapter.js",
-    "ingest:tmdb": "node ingest-tmdb.js"
+    "ingest:tmdb": "node ingest-tmdb.js",
     "test:threshold": "node test-threshold.js"
 },
   "dependencies": {
