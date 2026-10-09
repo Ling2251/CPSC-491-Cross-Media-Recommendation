@@ -1,6 +1,5 @@
 import { Routes, Route } from "react-router-dom";
 
-import FriendSuggestions from "./pages/FriendSuggestions/FriendSuggestions";
 import FriendsPage from "./pages/Friends/FriendsPage";
 
 function App() {
