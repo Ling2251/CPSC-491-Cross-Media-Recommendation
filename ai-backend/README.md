@@ -74,7 +74,7 @@ The CI workflow (`.github/workflows/ci.yml`) performs the following steps:
 3. **Install**: Installs dependencies from `requirements.txt`
 4. **Test**: Runs the full test suite with `pytest ai-backend/tests -v`
 
-All 12 tests must pass before code can be merged.
+The full backend test suite must pass before code can be merged.
 
 ### Local Test Execution
 
@@ -119,11 +119,14 @@ ai-backend/
 │   ├── __init__.py
 │   ├── main.py              # FastAPI app and endpoints
 │   ├── models.py            # Pydantic data models (with provenance fields)
+│   ├── preferences.py       # Preference and survey schemas (Sprint 3)
 │   └── services/
 │       ├── generator.py     # Dummy data generation (Sprint 1)
 │       ├── validator.py     # Data validation
 │       ├── recommender.py   # Baseline recommendation logic
-│       └── public_data.py   # Public API data collection (Sprint 2)
+│       ├── public_data.py   # Public API data collection (Sprint 2)
+│       ├── preference_manager.py  # In-memory preference storage (Sprint 3)
+│       └── onboarding.py    # Onboarding flow and survey (Sprint 3)
 ├── scripts/
 │   └── collect_public_data.py  # CLI for public data collection
 ├── tests/
@@ -131,7 +134,8 @@ ai-backend/
 │   ├── test_generator.py    # Tests for data generation
 │   ├── test_validator.py    # Tests for data validation
 │   ├── test_recommender.py  # Tests for recommendation logic
-│   └── test_public_data.py  # Tests for public data collection (Sprint 2)
+│   ├── test_public_data.py  # Tests for public data collection (Sprint 2)
+│   └── test_preferences.py  # Tests for preferences and onboarding (Sprint 3)
 ├── data/
 │   └── sample_public_media.json  # Sample collected data (Sprint 2)
 ├── requirements.txt
@@ -265,16 +269,11 @@ The system generates a 5-question survey covering:
 
 ### Preference Integration
 
-Saved preferences are integrated with the recommendation engine to:
-
-- Filter recommendations by user's preferred genres
-- Respect language preferences
-- Apply rating thresholds
-- Support discovery mode for unexpected recommendations
+Not yet integrated. `PreferenceManager` stores preferences in memory, and the recommender does not read them yet. Connecting saved preferences to recommendations is the next Sprint 3 step.
 
 ### Testing
 
-Sprint 3 includes comprehensive test coverage:
+Sprint 3 tests:
 
 ```bash
 pytest ai-backend/tests/test_preferences.py -v
@@ -286,11 +285,13 @@ Tests verify:
 - Onboarding flow state management
 - Survey generation
 - Onboarding completion
-- Preference updates and persistence
+- Preference updates and in-memory persistence
+- Schema boundaries (rating threshold, genre and language limits)
+- Repeated onboarding completion overwrites saved preferences
 
 ## Future Sprints
 
-- **Sprint 3**: User preference system integration
+- **Sprint 3**: Preference schema and onboarding (done); connect preferences to recommender (pending)
 - **Sprint 4**: Collaborative filtering and hybrid models
 - **Sprint 5**: Feedback loop and model retraining
 - **Sprint 6**: Deployment and frontend integration
