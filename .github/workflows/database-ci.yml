@@ -66,6 +66,10 @@ jobs:
         working-directory: database/scripts
         run: npm test
 
+      - name: Run tag threshold tests
+        working-directory: database/scripts
+        run: npm run test:threshold
+
       - name: Record build version
         run: |
           MIGRATION_COUNT=$(ls database/migrations/*.sql | wc -l)
