@@ -98,3 +98,21 @@ check('item with a qualifying candidate does not need review', () => {
   ]);
   assert.strictEqual(result.needsReview, false);
   assert.strictEqual(result.decisions[0].status, 'approved');
+  assert.strictEqual(result.decisions[1].status, 'pending_review');
+});
+
+check('item with no qualifying candidate needs review', () => {
+  const result = selectTagsForItem([
+    { tagId: 1, confidence: 0.5 },
+    { tagId: 2, confidence: 0.71 },
+  ]);
+  assert.strictEqual(result.needsReview, true);
+  assert.ok(result.decisions.every((decision) => decision.status === 'pending_review'));
+});
+
+check('item with no candidates (missing metadata) needs review', () => {
+  assert.strictEqual(selectTagsForItem([]).needsReview, true);
+  assert.strictEqual(selectTagsForItem(undefined).needsReview, true);
+});
+
+console.log(`\n${passed} threshold tests passed`);
