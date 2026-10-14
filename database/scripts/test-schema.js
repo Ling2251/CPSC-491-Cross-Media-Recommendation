@@ -148,6 +148,70 @@ async function main() {
         ),
     );
 
+    await client.query(
+        `INSERT INTO friend_similarity_scores
+           (user_id, candidate_user_id, overall_score, video_score, audio_score, text_score)
+         VALUES ($1, $2, 0.75, 0.8, 0.7, 0.75)`,
+        [user1.id, user2.id],
+    );
+    console.log('PASS  valid friend similarity score insert succeeds');
+
+    await expectConstraintViolation(
+        client,
+        'duplicate user/candidate similarity score is rejected',
+        () =>
+          client.query(
+            `INSERT INTO friend_similarity_scores
+               (user_id, candidate_user_id, overall_score, video_score, audio_score, text_score)
+             VALUES ($1, $2, 0.5, 0.5, 0.5, 0.5)`,
+            [user1.id, user2.id],
+          ),
+    );
+
+    await expectConstraintViolation(
+        client,
+        'self similarity score is rejected',
+        () =>
+          client.query(
+            `INSERT INTO friend_similarity_scores
+               (user_id, candidate_user_id, overall_score, video_score, audio_score, text_score)
+             VALUES ($1, $1, 0.5, 0.5, 0.5, 0.5)`,
+            [user1.id],
+          ),
+    );
+
+    await expectConstraintViolation(
+        client,
+        'out-of-range similarity score is rejected',
+        () =>
+          client.query(
+            `INSERT INTO friend_similarity_scores
+               (user_id, candidate_user_id, overall_score, video_score, audio_score, text_score)
+             VALUES ($1, $2, 1.1, 0.5, 0.5, 0.5)`,
+            [user2.id, user1.id],
+          ),
+    );
+
+    await client.query(
+        `INSERT INTO friend_similarity_scores
+           (user_id, candidate_user_id, overall_score, video_score, audio_score, text_score)
+         VALUES ($1, $2, 0.9, 0.9, 0.9, 0.9)
+         ON CONFLICT (user_id, candidate_user_id)
+         DO UPDATE SET overall_score = EXCLUDED.overall_score,
+                       video_score = EXCLUDED.video_score,
+                       audio_score = EXCLUDED.audio_score,
+                       text_score = EXCLUDED.text_score,
+                       calculated_at = now()`,
+        [user1.id, user2.id],
+    );
+    const updatedScore = await client.query(
+        `SELECT overall_score FROM friend_similarity_scores
+         WHERE user_id = $1 AND candidate_user_id = $2`,
+        [user1.id, user2.id],
+    );
+    assert.strictEqual(Number(updatedScore.rows[0].overall_score), 0.9);
+    console.log('PASS  similarity score upsert updates the existing record');
+
     await expectConstraintViolation(
       client,
       'duplicate tag_taxonomy(name, category) is rejected',

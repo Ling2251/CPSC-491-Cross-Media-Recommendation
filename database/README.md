@@ -72,6 +72,7 @@ database `cross_media_recommendation`.
 | `users` | App accounts used by authentication and friend recommendations |
 | `user_media_interactions` | Per-user consumed, saved, and rated media; tags are resolved through `media_tags` and `tag_taxonomy` |
 | `friendships` | Friend requests and accepted/declined relationships |
+| `friend_similarity_scores` | Directional overall and per-media-type similarity scores with calculation timestamps and ranking indexes |
 
 ## Adding a new migration
 
@@ -83,6 +84,20 @@ Migration `0004_create_friend_recommendation_tables.sql` adds the account,
 interaction, and friendship tables. To apply it to an existing database, run
 the migration runner from `database/scripts/`; it records applied migrations
 and skips them on later runs. The backend currently connects to
-`media_recommendation` in `backend/db.js`, while the database scripts default
-to `cross_media_recommendation`; set `PGDATABASE` consistently before running
-migrations or starting the backend.
+`cross_media_recommendation` by default, as do the database scripts. Set
+`PGDATABASE` consistently before running migrations or starting the backend
+if you use a different database name.
+
+Migration `0005_create_friend_similarity_scores.sql` adds persistent scores.
+The Python `rank_candidates` function scores and orders candidate profiles;
+`save_similarity_scores` upserts the ranked results and
+`get_ranked_similarity_scores` retrieves stored results by descending overall
+score.
+
+The Python friend-preference loader in
+`backend/app/friend_recommendation/database_service.py` reads each active
+user's interactions and approved media tags from these tables. It uses
+`DATABASE_URL` when set, or the standard `PGHOST`, `PGPORT`, `PGUSER`,
+`PGPASSWORD`, and `PGDATABASE` variables; the defaults match the database
+scripts. It maps catalog media types such as `movie`, `music`, and `book` to
+the preference categories `video`, `audio`, and `text`.
