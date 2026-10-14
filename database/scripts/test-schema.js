@@ -51,6 +51,103 @@ async function main() {
       )
     ).rows[0];
 
+    const user1 = (
+      await client.query(
+        `INSERT INTO users (name, email, password_hash)
+         VALUES ('__TestUser1__', '__test1@example.com', 'test-hash') RETURNING id`,
+      )
+    ).rows[0];
+    const user2 = (
+      await client.query(
+        `INSERT INTO users (name, email, password_hash)
+         VALUES ('__TestUser2__', '__test2@example.com', 'test-hash') RETURNING id`,
+      )
+    ).rows[0];
+
+    await expectConstraintViolation(
+      client,
+      'duplicate user email is rejected',
+      () =>
+        client.query(
+          `INSERT INTO users (name, email, password_hash)
+           VALUES ('__DuplicateUser__', '__test1@example.com', 'test-hash')`,
+        ),
+    );
+
+    await client.query(
+      `INSERT INTO user_media_interactions (user_id, media_id, interaction_type)
+       VALUES ($1, $2, 'consumed')`,
+      [user1.id, media.id],
+    );
+    await client.query(
+      `INSERT INTO user_media_interactions (user_id, media_id, interaction_type, rating)
+       VALUES ($1, $2, 'rated', 5)`,
+      [user2.id, media.id],
+    );
+    console.log('PASS  valid user_media_interactions inserts succeed');
+
+    await expectConstraintViolation(
+      client,
+      'duplicate user/media/interaction is rejected',
+      () =>
+        client.query(
+          `INSERT INTO user_media_interactions (user_id, media_id, interaction_type)
+           VALUES ($1, $2, 'consumed')`,
+          [user1.id, media.id],
+        ),
+    );
+
+    await expectConstraintViolation(
+      client,
+      'rated interaction without a valid rating is rejected',
+      () =>
+        client.query(
+          `INSERT INTO user_media_interactions (user_id, media_id, interaction_type)
+           VALUES ($1, $2, 'rated')`,
+          [user1.id, media.id],
+        ),
+    );
+
+    await expectConstraintViolation(
+      client,
+      'rating on a non-rated interaction is rejected',
+      () =>
+        client.query(
+          `INSERT INTO user_media_interactions (user_id, media_id, interaction_type, rating)
+           VALUES ($1, $2, 'saved', 4)`,
+          [user1.id, media.id],
+        ),
+    );
+
+    await client.query(
+      `INSERT INTO friendships (requester_id, receiver_id, status)
+       VALUES ($1, $2, 'pending')`,
+      [user1.id, user2.id],
+    );
+    console.log('PASS  valid friendship insert succeeds');
+
+    await expectConstraintViolation(
+      client,
+      'duplicate friendship in reverse direction is rejected',
+      () =>
+        client.query(
+          `INSERT INTO friendships (requester_id, receiver_id, status)
+           VALUES ($1, $2, 'pending')`,
+          [user2.id, user1.id],
+        ),
+    );
+
+    await expectConstraintViolation(
+      client,
+      'self friendship is rejected',
+      () =>
+        client.query(
+          `INSERT INTO friendships (requester_id, receiver_id)
+           VALUES ($1, $1)`,
+          [user1.id],
+        ),
+    );
+
     await expectConstraintViolation(
       client,
       'duplicate tag_taxonomy(name, category) is rejected',

@@ -69,9 +69,20 @@ database `cross_media_recommendation`.
 | `media`        | A recommendable item (movie, book, show, game, music, etc.)                               |
 | `tag_taxonomy` | Controlled vocabulary of tags (genre, mood, theme, era, style, pacing, trope, setting, instrumentation, audience) |
 | `media_tags`   | Many-to-many join between `media` and `tag_taxonomy`, carrying `confidence`, `source` (`external`/`auto`/`manual`/`user`), and `status` (`approved`/`pending_review`/`rejected`) |
+| `users` | App accounts used by authentication and friend recommendations |
+| `user_media_interactions` | Per-user consumed, saved, and rated media; tags are resolved through `media_tags` and `tag_taxonomy` |
+| `friendships` | Friend requests and accepted/declined relationships |
 
 ## Adding a new migration
 
 Add a new file to `migrations/` numbered one higher than the last
 (e.g. `0004_add_something.sql`), and update `schema/schema.sql` to reflect the
 resulting current-state schema.
+
+Migration `0004_create_friend_recommendation_tables.sql` adds the account,
+interaction, and friendship tables. To apply it to an existing database, run
+the migration runner from `database/scripts/`; it records applied migrations
+and skips them on later runs. The backend currently connects to
+`media_recommendation` in `backend/db.js`, while the database scripts default
+to `cross_media_recommendation`; set `PGDATABASE` consistently before running
+migrations or starting the backend.
