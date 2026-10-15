@@ -1,37 +1,28 @@
+
 name: FriendsRecommendation CI/CD
 
 # =========================================================
 # WORKFLOW TRIGGERS
 # =========================================================
 on:
-  # Run when code is pushed to the Friend Recommendation
-  # integration branch or merged into main.
   push:
     branches:
       - merge-FriendsRecommendation
       - main
 
-  # Run CI before pull requests are merged.
   pull_request:
     branches:
       - merge-FriendsRecommendation
       - main
 
-  # Allow manual execution from GitHub -> Actions.
   workflow_dispatch:
 
-
-# Read-only repository access is enough for this CI workflow.
 permissions:
   contents: read
 
-
-# Prevent multiple outdated runs on the same branch from
-# continuing unnecessarily.
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
-
 
 jobs:
 
@@ -78,53 +69,36 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-
-      # -----------------------------------------------------
-      # Set up Node.js
-      # -----------------------------------------------------
+      # Set up Node.js 24 for Vitest and jsdom
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "24"
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
+      - name: Verify Node.js version
+        working-directory: frontend
+        run: |
+          node --version
+          npm --version
 
-      # -----------------------------------------------------
-      # Install exact dependencies from package-lock.json
-      # -----------------------------------------------------
       - name: Install frontend dependencies
         working-directory: frontend
         run: npm ci
 
-
-      # -----------------------------------------------------
-      # Run ESLint
-      # -----------------------------------------------------
       - name: Lint frontend
         working-directory: frontend
         run: npm run lint
 
-
-      # -----------------------------------------------------
-      # Build React/Vite production application
-      # -----------------------------------------------------
       - name: Build React frontend
         working-directory: frontend
         run: npm run build
 
-
-      # -----------------------------------------------------
-      # Run frontend tests if a test script exists
-      # -----------------------------------------------------
       - name: Run frontend tests
         working-directory: frontend
-        run: npm test --if-present
+        run: npm test -- --run
 
-
-      # -----------------------------------------------------
-      # Save the production build as a GitHub artifact
-      # -----------------------------------------------------
       - name: Upload frontend build artifact
         uses: actions/upload-artifact@v4
         with:
@@ -133,10 +107,6 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-
-      # -----------------------------------------------------
-      # Frontend summary
-      # -----------------------------------------------------
       - name: Frontend build summary
         if: always()
         run: |
@@ -178,7 +148,7 @@ jobs:
             pip install -r backend/ai-backend/requirements.txt
           fi
 
-      - name: Run backend Python tests if the feature set is ready
+      - name: Run backend Python tests if ready
         shell: bash
         run: |
           if [ -d "backend/tests" ] && [ -f "backend/app/models.py" ] && [ -d "backend/app/services" ]; then
@@ -211,19 +181,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-
-      # -----------------------------------------------------
-      # Set up Node.js
-      # -----------------------------------------------------
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "20"
 
-
-      # -----------------------------------------------------
-      # Validate server.js syntax
-      # -----------------------------------------------------
       - name: Check server.js syntax
         shell: bash
         run: |
@@ -233,10 +195,6 @@ jobs:
             echo "backend/server.js not found - skipping."
           fi
 
-
-      # -----------------------------------------------------
-      # Validate db.js syntax
-      # -----------------------------------------------------
       - name: Check db.js syntax
         shell: bash
         run: |
@@ -246,10 +204,6 @@ jobs:
             echo "backend/db.js not found - skipping."
           fi
 
-
-      # -----------------------------------------------------
-      # JavaScript validation summary
-      # -----------------------------------------------------
       - name: JavaScript backend summary
         if: always()
         run: |
