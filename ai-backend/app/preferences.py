@@ -1,12 +1,11 @@
-from typing import Any
-from typing import List, Optional
+from typing import Any, List, Literal, Optional
 from pydantic import BaseModel, Field
 
 class PreferenceInput(BaseModel):
     """User preference input schema for onboarding."""
-    favorite_genres: List[str] = Field(..., min_items=1, max_items=10)
-    preferred_languages: List[str] = Field(..., min_items=1, max_items=5)
-    content_types: List[str] = Field(default=["movie", "tv_series"], description="Preferred media types")
+    favorite_genres: List[str] = Field(..., min_length=1, max_length=10)
+    preferred_languages: List[str] = Field(..., min_length=1, max_length=5)
+    content_types: List[Literal["movie", "tv_series", "book", "podcast"]] = Field(default=["movie", "tv_series"], description="Preferred media types")
     rating_threshold: float = Field(default=5.0, ge=0.0, le=10.0, description="Minimum rating to recommend")
     discovery_interest: bool = Field(default=True, description="Open to discovering new content")
 

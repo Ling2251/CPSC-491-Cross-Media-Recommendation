@@ -173,3 +173,21 @@ def test_onboarding_repeated_completion_overwrites_preferences():
     saved = manager.get_preferences(user_id=7)
     assert saved.favorite_genres == ["Romance"]
     assert saved.preferred_languages == ["French"]
+
+@pytest.mark.parametrize("media_type", ["movie", "tv_series", "book", "podcast"])
+def test_content_types_accepts_supported_values(media_type):
+    prefs = PreferenceInput(
+        favorite_genres=["Drama"],
+        preferred_languages=["English"],
+        content_types=[media_type],
+    )
+    assert prefs.content_types == [media_type]
+
+@pytest.mark.parametrize("media_type", ["music", "Movie", "video game", ""])
+def test_content_types_rejects_unsupported_values(media_type):
+    with pytest.raises(ValueError):
+        PreferenceInput(
+            favorite_genres=["Drama"],
+            preferred_languages=["English"],
+            content_types=[media_type],
+        )
