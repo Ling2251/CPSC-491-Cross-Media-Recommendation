@@ -144,3 +144,21 @@ def test_empty_save_does_not_open_connection():
         [],
         connection_factory=unexpected_connect,
     ) == 0
+
+
+def test_replacing_scores_deletes_previous_candidates_even_when_empty():
+    connection = FakeConnection()
+
+    count = save_similarity_scores(
+        7,
+        [],
+        connection_factory=lambda: connection,
+        replace_existing=True,
+    )
+
+    assert count == 0
+    assert len(connection.executions) == 1
+    assert "DELETE FROM friend_similarity_scores" in connection.executions[0][0]
+    assert connection.executions[0][1] == (7,)
+    assert connection.committed
+    assert connection.closed

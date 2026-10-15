@@ -94,6 +94,11 @@ The Python `rank_candidates` function scores and orders candidate profiles;
 `get_ranked_similarity_scores` retrieves stored results by descending overall
 score.
 
+`recalculate_friend_recommendations(user_id)` is the database-backed workflow:
+it builds profiles for all active users from their interactions and approved
+tags, ranks every other active user for the requested user, persists the full
+ranking (replacing that user's previous candidate set), and returns it.
+
 The Python friend-preference loader in
 `backend/app/friend_recommendation/database_service.py` reads each active
 user's interactions and approved media tags from these tables. It uses

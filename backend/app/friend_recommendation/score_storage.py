@@ -26,6 +26,11 @@ _UPSERT_SCORE_SQL = """
         calculated_at = now()
 """
 
+_DELETE_USER_SCORES_SQL = """
+    DELETE FROM friend_similarity_scores
+    WHERE user_id = %s
+"""
+
 _GET_RANKED_SCORES_SQL = """
     SELECT
         candidate_user_id,
@@ -63,8 +68,9 @@ def save_similarity_scores(
     user_id: int,
     ranked_candidates: Sequence[Dict[str, object]],
     connection_factory: Optional[Callable[[], Any]] = None,
+    replace_existing: bool = False,
 ) -> int:
-    """Insert or update ranked candidate scores; returns rows written."""
+    """Insert or update scores; optionally replace this user's candidate set."""
     user_id = _validate_user_id(user_id, "user_id")
     validated_rows = []
 
@@ -96,12 +102,14 @@ def save_similarity_scores(
             )
         )
 
-    if not validated_rows:
+    if not validated_rows and not replace_existing:
         return 0
 
     connect = connection_factory or connect_database
     connection = connect()
     try:
+        if replace_existing:
+            connection.execute(_DELETE_USER_SCORES_SQL, (user_id,))
         for row in validated_rows:
             connection.execute(_UPSERT_SCORE_SQL, row)
         connection.commit()

@@ -1,7 +1,7 @@
 """Load a user's media interactions from PostgreSQL for preference building."""
 
 import os
-from typing import Any, Callable, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 from .models import MediaInteraction
 from .preference_service import PreferenceProfile, build_preference_profile
@@ -60,6 +60,38 @@ _USER_INTERACTIONS_SQL = f"""
     ORDER BY umi.id
 """
 
+_ACTIVE_USER_IDS_SQL = """
+    SELECT id
+    FROM users
+    WHERE account_state = 'active'
+    ORDER BY id
+"""
+
+_ACTIVE_USER_INTERACTIONS_SQL = f"""
+    SELECT
+        umi.user_id,
+        umi.media_id,
+        {MEDIA_TYPE_CASE_SQL} AS preference_media_type,
+        umi.interaction_type,
+        umi.rating,
+        COALESCE(
+            array_agg(DISTINCT tt.name ORDER BY tt.name)
+                FILTER (WHERE tt.name IS NOT NULL),
+            ARRAY[]::text[]
+        ) AS tags
+    FROM user_media_interactions AS umi
+    JOIN users AS u
+        ON u.id = umi.user_id AND u.account_state = 'active'
+    JOIN media AS m ON m.id = umi.media_id
+    LEFT JOIN media_tags AS mt
+        ON mt.media_id = m.id AND mt.status = 'approved'
+    LEFT JOIN tag_taxonomy AS tt ON tt.id = mt.tag_id
+    WHERE {MEDIA_TYPE_CASE_SQL} IS NOT NULL
+    GROUP BY umi.user_id, umi.id, umi.media_id, m.media_type,
+             umi.interaction_type, umi.rating
+    ORDER BY umi.user_id, umi.id
+"""
+
 
 def connect_database() -> Any:
     """Open PostgreSQL using DATABASE_URL or the standard PG* variables."""
@@ -109,6 +141,43 @@ def load_user_interactions(
             )
             for row in rows
         ]
+    finally:
+        connection.close()
+
+
+def load_active_user_preference_profiles(
+    connection_factory: Optional[Callable[[], Any]] = None,
+) -> Dict[int, PreferenceProfile]:
+    """Build preference profiles for all active users in the database."""
+    connect = connection_factory or connect_database
+    connection = connect()
+    try:
+        user_ids = [
+            row[0]
+            for row in connection.execute(_ACTIVE_USER_IDS_SQL).fetchall()
+        ]
+        interactions_by_user: Dict[int, List[MediaInteraction]] = {
+            user_id: [] for user_id in user_ids
+        }
+
+        rows = connection.execute(
+            _ACTIVE_USER_INTERACTIONS_SQL
+        ).fetchall()
+        for row in rows:
+            interactions_by_user[row[0]].append(
+                MediaInteraction(
+                    media_id=row[1],
+                    media_type=row[2],
+                    interaction_type=row[3],
+                    rating=row[4],
+                    tags=list(row[5] or []),
+                )
+            )
+
+        return {
+            user_id: build_preference_profile(interactions)
+            for user_id, interactions in interactions_by_user.items()
+        }
     finally:
         connection.close()
 
