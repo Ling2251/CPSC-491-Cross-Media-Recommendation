@@ -1,6 +1,6 @@
 import { useState } from "react"
 
-function Login() {
+function Login({ onLogin }) {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [message, setMessage] = useState("")
@@ -29,10 +29,22 @@ function Login() {
         setMessage(data.message || "Login failed")
         return
       }
+      
+      if (!data.token || !data.user) {
+        setMessage("Login response is missing user information")
+        return
+      }
+
+      if (typeof onLogin !== "function") {
+        setMessage("Login configuration error: onLogin is missing")
+        return
+      }
 
       localStorage.setItem("token", data.token)
 
       setMessage("Login successful!")
+
+      onLogin(data.user)
     } catch (error) {
       console.error(error)
       setMessage("Could not connect to the server")
