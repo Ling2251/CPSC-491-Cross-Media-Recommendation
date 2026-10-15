@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { Routes, Route } from "react-router-dom";
+
+import LandingPage from "./pages/Landing/LandingPage.jsx";
 import Dashboard from "./pages/Dashboard";
 import FriendsPage from "./pages/Friends/FriendsPage";
 import Login from "./pages/Login";
@@ -28,6 +30,11 @@ function App() {
 
   return (
     <Routes>
+      <Route
+        path="/manage-friends"
+        element={<FriendsPage />}
+      />
+      <Route path="/" element={<LandingPage />} />
       <Route path="/" element={accountPage} />
       <Route path="/login" element={accountPage} />
       <Route path="/friends" element={<FriendsPage />} />
