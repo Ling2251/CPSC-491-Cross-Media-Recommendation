@@ -1,0 +1,243 @@
+
+name: FriendsRecommendation CI/CD
+
+# =========================================================
+# WORKFLOW TRIGGERS
+# =========================================================
+on:
+  push:
+    branches:
+      - merge-FriendsRecommendation
+      - main
+
+  pull_request:
+    branches:
+      - merge-FriendsRecommendation
+      - main
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+
+  # =========================================================
+  # 1. GENERATE UNIQUE BUILD VERSION
+  # =========================================================
+  version:
+    name: Generate Build Version
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    outputs:
+      build_version: ${{ steps.version.outputs.build_version }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Generate unique build version
+        id: version
+        shell: bash
+        run: |
+          SHORT_SHA="${GITHUB_SHA::7}"
+          BUILD_VERSION="build-${GITHUB_RUN_NUMBER}-${SHORT_SHA}"
+
+          echo "build_version=${BUILD_VERSION}" >> "$GITHUB_OUTPUT"
+
+          echo "======================================"
+          echo "CPSC 491 Build Version"
+          echo "${BUILD_VERSION}"
+          echo "======================================"
+
+
+  # =========================================================
+  # 2. FRONTEND BUILD AND VALIDATION
+  # =========================================================
+  frontend:
+    name: Frontend Build and Validation
+    runs-on: ubuntu-latest
+    needs: version
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Set up Node.js 24 for Vitest and jsdom
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Verify Node.js version
+        working-directory: frontend
+        run: |
+          node --version
+          npm --version
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Lint frontend
+        working-directory: frontend
+        run: npm run lint
+
+      - name: Build React frontend
+        working-directory: frontend
+        run: npm run build
+
+      - name: Run frontend tests
+        working-directory: frontend
+        run: npm test -- --run
+
+      - name: Upload frontend build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-${{ needs.version.outputs.build_version }}
+          path: frontend/dist/
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Frontend build summary
+        if: always()
+        run: |
+          echo "======================================"
+          echo "Frontend validation completed"
+          echo "Build: ${{ needs.version.outputs.build_version }}"
+          echo "======================================"
+
+
+  # =========================================================
+  # 3. PYTHON BACKEND TESTS
+  # =========================================================
+  backend-python:
+    name: Python Backend Tests
+    runs-on: ubuntu-latest
+    needs: version
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install backend dependencies
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+
+          if [ -f "backend/requirements.txt" ]; then
+            pip install -r backend/requirements.txt
+          fi
+
+          if [ -f "backend/ai-backend/requirements.txt" ]; then
+            pip install -r backend/ai-backend/requirements.txt
+          fi
+
+      - name: Run backend Python tests if ready
+        shell: bash
+        run: |
+          if [ -d "backend/tests" ] && [ -f "backend/app/models.py" ] && [ -d "backend/app/services" ]; then
+            cd backend
+            python -m pytest tests -v --tb=short
+          else
+            echo "Backend test suite is not ready yet for this Sprint; skipping Python CI validation."
+            echo "Expected files: backend/app/models.py and backend/app/services/"
+          fi
+
+      - name: Python test summary
+        if: always()
+        run: |
+          echo "======================================"
+          echo "Python backend validation completed"
+          echo "Build: ${{ needs.version.outputs.build_version }}"
+          echo "======================================"
+
+
+  # =========================================================
+  # 4. JAVASCRIPT BACKEND VALIDATION
+  # =========================================================
+  backend-javascript:
+    name: JavaScript Backend Validation
+    runs-on: ubuntu-latest
+    needs: version
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Check server.js syntax
+        shell: bash
+        run: |
+          if [ -f "backend/server.js" ]; then
+            node --check backend/server.js
+          else
+            echo "backend/server.js not found - skipping."
+          fi
+
+      - name: Check db.js syntax
+        shell: bash
+        run: |
+          if [ -f "backend/db.js" ]; then
+            node --check backend/db.js
+          else
+            echo "backend/db.js not found - skipping."
+          fi
+
+      - name: JavaScript backend summary
+        if: always()
+        run: |
+          echo "======================================"
+          echo "JavaScript backend validation completed"
+          echo "Build: ${{ needs.version.outputs.build_version }}"
+          echo "======================================"
+
+
+  # =========================================================
+  # 5. FINAL CI STATUS
+  # =========================================================
+  ci-complete:
+    name: CI Complete
+    runs-on: ubuntu-latest
+
+    needs:
+      - version
+      - frontend
+      - backend-python
+      - backend-javascript
+
+    timeout-minutes: 5
+
+    steps:
+      - name: Display successful CI result
+        run: |
+          echo "======================================"
+          echo "CPSC 491 CI/CD PASSED"
+          echo ""
+          echo "Build Version:"
+          echo "${{ needs.version.outputs.build_version }}"
+          echo ""
+          echo "Frontend: PASSED"
+          echo "Python Backend: PASSED"
+          echo "JavaScript Backend: PASSED"
+          echo "======================================"
