@@ -2,6 +2,8 @@ import pytest
 from app.preferences import PreferenceInput, PreferenceResponse, SurveyQuestion
 from app.services.preference_manager import PreferenceManager
 from app.services.onboarding import OnboardingFlow
+from app.services.onboarding import OnboardingError
+from app.preferences import SurveyOption
 
 def test_preference_input_validation():
     """Test preference input schema validation."""
@@ -84,16 +86,24 @@ def test_onboarding_survey_generation():
     assert survey[0].id == "q1"
     assert survey[0].question_type == "multi_choice"
 
+VALID_ANSWERS = {
+    "q1": ["Action", "Sci-Fi"],
+    "q2": ["English"],
+    "q3": ["movie"],
+    "q4": 5.0,
+    "q5": "yes",
+}
+
+def _flow_at_summary(manager):
+    flow = OnboardingFlow(manager)
+    flow.start_survey()
+    prefs = flow.submit_survey(VALID_ANSWERS)
+    return flow, prefs
+
 def test_onboarding_complete():
     """Test onboarding completion."""
     manager = PreferenceManager()
-    flow = OnboardingFlow(manager)
-
-    prefs = PreferenceInput(
-        favorite_genres=["Action", "Sci-Fi"],
-        preferred_languages=["English"],
-        discovery_interest=True
-    )
+    flow, prefs = _flow_at_summary(manager)
 
     result = flow.process_onboarding_complete(user_id=1, preferences=prefs)
     assert result["status"] == "success"
@@ -162,9 +172,7 @@ def test_preferred_languages_over_five_rejected():
 
 def test_onboarding_repeated_completion_overwrites_preferences():
     manager = PreferenceManager()
-    flow = OnboardingFlow(manager)
-
-    first = PreferenceInput(favorite_genres=["Action"], preferred_languages=["English"])
+    flow, first = _flow_at_summary(manager)
     second = PreferenceInput(favorite_genres=["Romance"], preferred_languages=["French"])
 
     assert flow.process_onboarding_complete(user_id=7, preferences=first)["status"] == "success"
@@ -191,3 +199,111 @@ def test_content_types_rejects_unsupported_values(media_type):
             preferred_languages=["English"],
             content_types=[media_type],
         )
+
+
+def test_onboarding_progresses_through_all_steps_in_order():
+    manager = PreferenceManager()
+    flow = OnboardingFlow(manager)
+    assert flow.get_current_step() == "welcome"
+
+    flow.start_survey()
+    assert flow.get_current_step() == "survey"
+
+    flow.submit_survey(VALID_ANSWERS)
+    assert flow.get_current_step() == "preferences_summary"
+
+    flow.process_onboarding_complete(user_id=3, preferences=flow.preferences)
+    assert flow.get_current_step() == "complete"
+    assert manager.get_preferences(user_id=3).favorite_genres == ["Action", "Sci-Fi"]
+
+def test_survey_cannot_be_submitted_before_starting():
+    flow = OnboardingFlow(PreferenceManager())
+    with pytest.raises(OnboardingError):
+        flow.submit_survey(VALID_ANSWERS)
+    assert flow.get_current_step() == "welcome"
+
+def test_completion_cannot_skip_survey_and_summary():
+    manager = PreferenceManager()
+    flow = OnboardingFlow(manager)
+    prefs = PreferenceInput(favorite_genres=["Drama"], preferred_languages=["English"])
+    with pytest.raises(OnboardingError):
+        flow.process_onboarding_complete(user_id=1, preferences=prefs)
+    flow.start_survey()
+    with pytest.raises(OnboardingError):
+        flow.process_onboarding_complete(user_id=1, preferences=prefs)
+    assert manager.get_preferences(user_id=1) is None
+    assert flow.get_current_step() == "survey"
+
+def test_start_survey_twice_is_rejected():
+    flow = OnboardingFlow(PreferenceManager())
+    flow.start_survey()
+    with pytest.raises(OnboardingError):
+        flow.start_survey()
+
+@pytest.mark.parametrize("missing_key", ["q1", "q2", "q3"])
+def test_incomplete_required_survey_answer_is_rejected(missing_key):
+    flow = OnboardingFlow(PreferenceManager())
+    flow.start_survey()
+    answers = {k: v for k, v in VALID_ANSWERS.items() if k != missing_key}
+    with pytest.raises(OnboardingError):
+        flow.submit_survey(answers)
+    assert flow.get_current_step() == "survey"
+
+def test_unsupported_content_type_in_survey_is_rejected():
+    flow = OnboardingFlow(PreferenceManager())
+    flow.start_survey()
+    with pytest.raises(OnboardingError):
+        flow.submit_survey({**VALID_ANSWERS, "q3": ["music"]})
+    assert flow.get_current_step() == "survey"
+
+def test_survey_discovery_answer_must_be_yes_or_no():
+    flow = OnboardingFlow(PreferenceManager())
+    flow.start_survey()
+    with pytest.raises(OnboardingError):
+        flow.submit_survey({**VALID_ANSWERS, "q5": "maybe"})
+
+def test_survey_answers_build_preference_input_with_defaults():
+    flow = OnboardingFlow(PreferenceManager())
+    flow.start_survey()
+    prefs = flow.submit_survey({"q1": ["Drama"], "q2": ["English"], "q3": ["book"]})
+    assert prefs.rating_threshold == 5.0
+    assert prefs.discovery_interest is True
+    assert prefs.content_types == ["book"]
+
+def test_survey_discovery_no_maps_to_false():
+    flow = OnboardingFlow(PreferenceManager())
+    flow.start_survey()
+    prefs = flow.submit_survey({**VALID_ANSWERS, "q5": "no"})
+    assert prefs.discovery_interest is False
+
+def test_survey_content_type_labels_and_values():
+    q3 = next(q for q in _manager_survey() if q.id == "q3")
+    pairs = [(o.label, o.value) for o in q3.options]
+    assert pairs == [
+        ("Movies", "movie"),
+        ("TV Series", "tv_series"),
+        ("Books", "book"),
+        ("Podcasts", "podcast"),
+    ]
+
+def test_survey_content_type_values_are_accepted_by_schema():
+    q3 = next(q for q in _manager_survey() if q.id == "q3")
+    for option in q3.options:
+        assert PreferenceInput(
+            favorite_genres=["Drama"],
+            preferred_languages=["English"],
+            content_types=[option.value],
+        ).content_types == [option.value]
+
+def test_survey_genre_and_language_labels_match_values():
+    survey = {q.id: q for q in _manager_survey()}
+    for qid in ("q1", "q2", "q5"):
+        for option in survey[qid].options:
+            assert isinstance(option, SurveyOption)
+            assert option.label
+            assert option.value
+    assert all(o.label == o.value for o in survey["q1"].options)
+    assert all(o.label == o.value for o in survey["q2"].options)
+
+def _manager_survey():
+    return PreferenceManager().generate_initial_survey()

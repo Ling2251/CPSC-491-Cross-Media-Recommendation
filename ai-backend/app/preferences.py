@@ -16,12 +16,17 @@ class PreferenceResponse(BaseModel):
     recommendation_count: int
     message: str
 
+class SurveyOption(BaseModel):
+    """A survey choice: the label shown to the user and the value stored."""
+    label: str
+    value: str
+
 class SurveyQuestion(BaseModel):
     """Survey question for preference gathering."""
     id: str
     question: str
     question_type: str  # "single_choice", "multi_choice", "rating", "text"
-    options: Optional[List[str]] = None
+    options: Optional[List[SurveyOption]] = None
     required: bool = True
 
 class SurveyResponse(BaseModel):

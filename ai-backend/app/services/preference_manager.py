@@ -1,5 +1,5 @@
 from typing import Dict, List, Optional
-from app.preferences import PreferenceInput, PreferenceResponse, SurveyQuestion, SurveyResponse
+from app.preferences import PreferenceInput, PreferenceResponse, SurveyOption, SurveyQuestion, SurveyResponse
 from app.services.recommender import BaselineRecommender
 
 class PreferenceManager:
@@ -40,26 +40,32 @@ class PreferenceManager:
 
     def generate_initial_survey(self) -> List[SurveyQuestion]:
         """Generate initial onboarding survey."""
+        same_label_and_value = lambda values: [SurveyOption(label=v, value=v) for v in values]
         return [
             SurveyQuestion(
                 id="q1",
                 question="What are your favorite media genres?",
                 question_type="multi_choice",
-                options=["Action", "Comedy", "Drama", "Horror", "Sci-Fi", "Romance", "Thriller", "Animation"],
+                options=same_label_and_value(["Action", "Comedy", "Drama", "Horror", "Sci-Fi", "Romance", "Thriller", "Animation"]),
                 required=True
             ),
             SurveyQuestion(
                 id="q2",
                 question="What languages do you prefer?",
                 question_type="multi_choice",
-                options=["English", "Spanish", "French", "German", "Japanese", "Korean"],
+                options=same_label_and_value(["English", "Spanish", "French", "German", "Japanese", "Korean"]),
                 required=True
             ),
             SurveyQuestion(
                 id="q3",
                 question="What types of media interest you?",
                 question_type="multi_choice",
-                options=["Movies", "TV Series", "Books", "Podcasts"],
+                options=[
+                    SurveyOption(label="Movies", value="movie"),
+                    SurveyOption(label="TV Series", value="tv_series"),
+                    SurveyOption(label="Books", value="book"),
+                    SurveyOption(label="Podcasts", value="podcast"),
+                ],
                 required=True
             ),
             SurveyQuestion(
@@ -72,7 +78,7 @@ class PreferenceManager:
                 id="q5",
                 question="Are you open to discovering new content?",
                 question_type="single_choice",
-                options=["Yes", "No"],
+                options=[SurveyOption(label="Yes", value="yes"), SurveyOption(label="No", value="no")],
                 required=False
             )
         ]
