@@ -1,10 +1,10 @@
+
 import { users } from "../data/users";
 import { FriendshipStatus } from "../models/friendship";
 
 export class FriendshipService {
   constructor() {
-    // Temporary local friendship data.
-    // This will later be replaced by PostgreSQL/backend data.
+    // Temporary local data until PostgreSQL is integrated.
     this.friendships = [
       {
         id: 1,
@@ -41,17 +41,13 @@ export class FriendshipService {
     return this.friendships.filter(
       (friendship) =>
         friendship.status === FriendshipStatus.ACCEPTED &&
-        (
-          Number(friendship.requesterId) === Number(userId) ||
-          Number(friendship.receiverId) === Number(userId)
-        )
+        (Number(friendship.requesterId) === Number(userId) ||
+          Number(friendship.receiverId) === Number(userId))
     );
   }
 
   getOtherUserId(friendship, currentUserId) {
-    if (
-      Number(friendship.requesterId) === Number(currentUserId)
-    ) {
+    if (Number(friendship.requesterId) === Number(currentUserId)) {
       return friendship.receiverId;
     }
 
@@ -68,22 +64,29 @@ export class FriendshipService {
     return this.friendships.some(
       (friendship) =>
         friendship.status !== FriendshipStatus.DECLINED &&
-        (
-          (
-            Number(friendship.requesterId) === Number(userA) &&
-            Number(friendship.receiverId) === Number(userB)
-          ) ||
-          (
-            Number(friendship.requesterId) === Number(userB) &&
-            Number(friendship.receiverId) === Number(userA)
-          )
-        )
+        ((Number(friendship.requesterId) === Number(userA) &&
+          Number(friendship.receiverId) === Number(userB)) ||
+          (Number(friendship.requesterId) === Number(userB) &&
+            Number(friendship.receiverId) === Number(userA)))
     );
   }
 
+  // Send a new friend request
   sendRequest(requesterId, receiverId) {
     requesterId = Number(requesterId);
     receiverId = Number(receiverId);
+
+    if (
+      !Number.isSafeInteger(requesterId) ||
+      requesterId <= 0 ||
+      !Number.isSafeInteger(receiverId) ||
+      receiverId <= 0
+    ) {
+      return {
+        success: false,
+        message: "Valid user IDs are required.",
+      };
+    }
 
     if (!this.userExists(requesterId)) {
       return {
@@ -106,16 +109,10 @@ export class FriendshipService {
       };
     }
 
-    if (
-      this.friendshipExists(
-        requesterId,
-        receiverId
-      )
-    ) {
+    if (this.friendshipExists(requesterId, receiverId)) {
       return {
         success: false,
-        message:
-          "A friend request or friendship already exists.",
+        message: "A friend request or friendship already exists.",
       };
     }
 
@@ -132,12 +129,13 @@ export class FriendshipService {
     };
   }
 
-  acceptRequest(requestId) {
+  // Accept an incoming friend request
+  acceptRequest(requestId, currentUserId) {
     requestId = Number(requestId);
+    currentUserId = Number(currentUserId);
 
     const request = this.friendships.find(
-      (friendship) =>
-        Number(friendship.id) === requestId
+      (friendship) => Number(friendship.id) === requestId
     );
 
     if (!request) {
@@ -147,13 +145,17 @@ export class FriendshipService {
       };
     }
 
-    if (
-      request.status !== FriendshipStatus.PENDING
-    ) {
+    if (request.status !== FriendshipStatus.PENDING) {
       return {
         success: false,
-        message:
-          "This friend request is no longer pending.",
+        message: "This friend request is no longer pending.",
+      };
+    }
+
+    if (Number(request.receiverId) !== currentUserId) {
+      return {
+        success: false,
+        message: "Only the receiver can accept this request.",
       };
     }
 
@@ -165,12 +167,13 @@ export class FriendshipService {
     };
   }
 
-  declineRequest(requestId) {
+  // Decline an incoming friend request
+  declineRequest(requestId, currentUserId) {
     requestId = Number(requestId);
+    currentUserId = Number(currentUserId);
 
     const request = this.friendships.find(
-      (friendship) =>
-        Number(friendship.id) === requestId
+      (friendship) => Number(friendship.id) === requestId
     );
 
     if (!request) {
@@ -180,13 +183,17 @@ export class FriendshipService {
       };
     }
 
-    if (
-      request.status !== FriendshipStatus.PENDING
-    ) {
+    if (request.status !== FriendshipStatus.PENDING) {
       return {
         success: false,
-        message:
-          "This friend request is no longer pending.",
+        message: "This friend request is no longer pending.",
+      };
+    }
+
+    if (Number(request.receiverId) !== currentUserId) {
+      return {
+        success: false,
+        message: "Only the receiver can decline this request.",
       };
     }
 
@@ -198,8 +205,45 @@ export class FriendshipService {
     };
   }
 
-  removeFriend(friendshipId) {
+  // Cancel an outgoing friend request
+  cancelRequest(requestId, currentUserId) {
+    requestId = Number(requestId);
+    currentUserId = Number(currentUserId);
+
+    const index = this.friendships.findIndex(
+      (friendship) =>
+        Number(friendship.id) === requestId &&
+        friendship.status === FriendshipStatus.PENDING
+    );
+
+    if (index === -1) {
+      return {
+        success: false,
+        message: "Pending friend request does not exist.",
+      };
+    }
+
+    const request = this.friendships[index];
+
+    if (Number(request.requesterId) !== currentUserId) {
+      return {
+        success: false,
+        message: "Only the sender can cancel this request.",
+      };
+    }
+
+    this.friendships.splice(index, 1);
+
+    return {
+      success: true,
+      message: "Friend request cancelled.",
+    };
+  }
+
+  // Remove an existing friendship
+  removeFriend(friendshipId, currentUserId) {
     friendshipId = Number(friendshipId);
+    currentUserId = Number(currentUserId);
 
     const index = this.friendships.findIndex(
       (friendship) =>
@@ -210,8 +254,19 @@ export class FriendshipService {
     if (index === -1) {
       return {
         success: false,
-        message:
-          "Accepted friendship does not exist.",
+        message: "Accepted friendship does not exist.",
+      };
+    }
+
+    const friendship = this.friendships[index];
+
+    if (
+      Number(friendship.requesterId) !== currentUserId &&
+      Number(friendship.receiverId) !== currentUserId
+    ) {
+      return {
+        success: false,
+        message: "You are not part of this friendship.",
       };
     }
 
@@ -224,5 +279,4 @@ export class FriendshipService {
   }
 }
 
-export const friendshipService =
-  new FriendshipService();
+export const friendshipService = new FriendshipService();
