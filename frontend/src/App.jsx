@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Routes, Route } from "react-router-dom";
-import FriendSuggestions from "./pages/FriendSuggestions/FriendSuggestions";
 import Dashboard from "./pages/Dashboard";
+import FriendsPage from "./pages/Friends/FriendsPage";
 import Login from "./pages/Login";
 import Onboarding from "./pages/Onboarding";
 import Signup from "./pages/Signup";
@@ -30,7 +30,8 @@ function App() {
     <Routes>
       <Route path="/" element={accountPage} />
       <Route path="/login" element={accountPage} />
-      <Route path="/friends" element={<FriendSuggestions />} />
+      <Route path="/friends" element={<FriendsPage />} />
+      <Route path="/manage-friends" element={<FriendsPage />} />
       <Route path="/signup" element={<Signup />} />
       <Route path="*" element={accountPage} />
     </Routes>
