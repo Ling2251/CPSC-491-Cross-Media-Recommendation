@@ -1,36 +1,29 @@
+
 name: Backend CI Tests
 
 on:
   push:
-    branches:
-      - main
-      - AI-Recommendation
-      - 'feature/**'
+    branches: [ main, AI-Recommendation, feature/* ]
     paths:
       - 'ai-backend/**'
-      - '.github/workflows/backend-ci.yml'
+      - '.github/workflows/ci.yml'
+
   pull_request:
-    branches:
-      - main
-      - AI-Recommendation
+    branches: [ main, AI-Recommendation ]
     paths:
       - 'ai-backend/**'
-      - '.github/workflows/backend-ci.yml'
 
 jobs:
-  backend-test:
-    name: Test Python Backend
+  test:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v3
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v4
         with:
           python-version: '3.12'
-          cache: pip
-          cache-dependency-path: ai-backend/requirements.txt
 
       - name: Install dependencies
         run: |
@@ -40,11 +33,12 @@ jobs:
       - name: Run backend tests
         run: |
           if [ -d "ai-backend/tests" ]; then
-            python -m pytest ai-backend/tests -v --tb=short
+            pytest ai-backend/tests -v --tb=short
           else
             echo "No tests found in ai-backend/tests"
           fi
 
       - name: Test results summary
         if: always()
-        run: echo "Backend test suite completed"
+        run: |
+          echo "Backend test suite completed"
