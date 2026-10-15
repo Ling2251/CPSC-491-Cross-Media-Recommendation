@@ -70,6 +70,14 @@ jobs:
         working-directory: database/scripts
         run: npm run test:threshold
 
+      - name: Run candidate generator tests
+        working-directory: database/scripts
+        run: npm run test:candidates
+
+      - name: Run media profile tests
+        working-directory: database/scripts
+        run: npm run test:profile
+
       - name: Record build version
         run: |
           MIGRATION_COUNT=$(ls database/migrations/*.sql | wc -l)
