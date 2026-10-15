@@ -227,6 +227,26 @@ app.get("/api/profile", authenticateToken, async (req, res) => {
   }
 });
 
+// Week 5: Activate user after onboarding is completed
+async function activateUser(userId) {
+  try {
+    const result = await pool.query(
+      `UPDATE users
+       SET account_state = 'ACTIVE'
+       WHERE id = $1
+         AND account_state = 'ONBOARDING_REQUIRED'
+       RETURNING id, account_state`,
+      [userId]
+    );
+
+    return result.rows[0] || null;
+
+  } catch (error) {
+    console.error("Error activating user:", error);
+    throw error;
+  }
+}
+
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`)
 })
