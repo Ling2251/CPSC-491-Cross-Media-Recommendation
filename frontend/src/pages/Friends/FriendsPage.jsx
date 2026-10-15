@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import "./FriendsPage.css";
 
 import { friendshipService } from "../../services/friendshipService.js";
 import {
