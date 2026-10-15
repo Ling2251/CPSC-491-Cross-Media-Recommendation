@@ -1,0 +1,37 @@
+from typing import Any, List, Literal, Optional
+from pydantic import BaseModel, Field
+
+class PreferenceInput(BaseModel):
+    """User preference input schema for onboarding."""
+    favorite_genres: List[str] = Field(..., min_length=1, max_length=10)
+    preferred_languages: List[str] = Field(..., min_length=1, max_length=5)
+    content_types: List[Literal["movie", "tv_series", "book", "podcast"]] = Field(default=["movie", "tv_series"], description="Preferred media types")
+    rating_threshold: float = Field(default=5.0, ge=0.0, le=10.0, description="Minimum rating to recommend")
+    discovery_interest: bool = Field(default=True, description="Open to discovering new content")
+
+class PreferenceResponse(BaseModel):
+    """Response after preference submission."""
+    user_id: int
+    preferences_saved: bool
+    recommendation_count: int
+    message: str
+
+class SurveyOption(BaseModel):
+    """A survey choice: the label shown to the user and the value stored."""
+    label: str
+    value: str
+
+class SurveyQuestion(BaseModel):
+    """Survey question for preference gathering."""
+    id: str
+    question: str
+    question_type: str  # "single_choice", "multi_choice", "rating", "text"
+    options: Optional[List[SurveyOption]] = None
+    required: bool = True
+
+class SurveyResponse(BaseModel):
+    """User's survey responses."""
+    user_id: int
+    question_id: str
+    answer: Any
+    timestamp: str
