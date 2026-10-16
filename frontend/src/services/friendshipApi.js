@@ -2,7 +2,6 @@
 const API_BASE_URL =
   import.meta.env.VITE_API_URL || "http://localhost:3001";
 
-// Make an authenticated request to the backend.
 async function apiRequest(path, options = {}) {
   const token = localStorage.getItem("token");
 
@@ -37,31 +36,25 @@ async function apiRequest(path, options = {}) {
 }
 
 export const friendshipApi = {
-  // Get accepted friendships.
   async getFriends() {
     const data = await apiRequest("/api/friends");
     return data.friendships;
   },
 
-  // Get incoming pending requests.
   async getIncomingRequests() {
     const data = await apiRequest(
       "/api/friends/requests/incoming"
     );
-
     return data.friendships;
   },
 
-  // Get outgoing pending requests.
   async getOutgoingRequests() {
     const data = await apiRequest(
       "/api/friends/requests/outgoing"
     );
-
     return data.friendships;
   },
 
-  // Send a request to another user.
   async sendRequest(receiverId) {
     return apiRequest("/api/friends/requests", {
       method: "POST",
@@ -69,7 +62,6 @@ export const friendshipApi = {
     });
   },
 
-  // Accept a pending request.
   async acceptRequest(requestId) {
     return apiRequest(
       `/api/friends/requests/${requestId}/accept`,
@@ -77,7 +69,6 @@ export const friendshipApi = {
     );
   },
 
-  // Decline a pending request.
   async declineRequest(requestId) {
     return apiRequest(
       `/api/friends/requests/${requestId}/decline`,
@@ -85,7 +76,6 @@ export const friendshipApi = {
     );
   },
 
-  // Cancel an outgoing request.
   async cancelRequest(requestId) {
     return apiRequest(
       `/api/friends/requests/${requestId}`,
@@ -93,7 +83,6 @@ export const friendshipApi = {
     );
   },
 
-  // Remove an accepted friend.
   async removeFriend(friendshipId) {
     return apiRequest(
       `/api/friends/${friendshipId}`,
