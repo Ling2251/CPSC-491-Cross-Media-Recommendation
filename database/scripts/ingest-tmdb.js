@@ -1,11 +1,14 @@
 // Orchestrates a TMDb import: paginates through /discover/movie, normalizes
-// and inserts each record, applies mapped genre tags, and reports the
-// fetched/inserted/skipped/rejected/failed metrics required by Sprint 2.
+// and inserts each record, applies mapped genre tags, generates and
+// classifies candidate tags for anything inferred (Sprint 3), and reports
+// the fetched/inserted/skipped/rejected/failed metrics required by Sprint 2.
 const { createPool } = require('./db');
 const { insertMediaIfNew } = require('./media');
 const { getTagByNameAndCategory } = require('./tags');
 const { assignTag } = require('./mediaTags');
 const { normalizeRecord, fetchMoviePage } = require('./adapters/tmdb');
+const { generateCandidates } = require('./adapters/candidateGenerator');
+const { classifyCandidate } = require('./tagThreshold');
 
 async function ingest({ pool, apiKey, maxPages = 3 }) {
   const metrics = { fetched: 0, inserted: 0, skipped: 0, rejected: 0, failed: 0 };
@@ -44,6 +47,7 @@ async function ingest({ pool, apiKey, maxPages = 3 }) {
       }
 
       metrics.inserted += 1;
+      console.log(`[tmdb:${normalized.media.externalId}] inserted media #${inserted.id} "${inserted.title}"`);
 
       for (const tagName of normalized.tagNames) {
         const tag = await getTagByNameAndCategory(pool, tagName, 'genre');
@@ -54,6 +58,29 @@ async function ingest({ pool, apiKey, maxPages = 3 }) {
           confidence: 1.0,
           source: 'external',
         });
+        console.log(`[tmdb:${normalized.media.externalId}] media #${inserted.id} tagged "${tagName}" (source=external, confidence=1.0)`);
+      }
+
+      // Sprint 3: generate candidate tags inferred from metadata (e.g. era
+      // from release date) and run each through the confidence threshold
+      // before persisting, so low-confidence guesses land as pending_review
+      // or rejected instead of being auto-approved like provider tags are.
+      const candidates = generateCandidates(normalized.media);
+      for (const candidate of candidates) {
+        const tag = await getTagByNameAndCategory(pool, candidate.name, candidate.category);
+        if (!tag) continue; // seed data not loaded for this tag; skip rather than fail the import
+        const decision = classifyCandidate(candidate.confidence);
+        await assignTag(pool, {
+          mediaId: inserted.id,
+          tagId: tag.id,
+          confidence: candidate.confidence,
+          source: decision.source,
+          status: decision.status,
+        });
+        console.log(
+          `[tmdb:${normalized.media.externalId}] media #${inserted.id} candidate "${candidate.name}" `
+            + `confidence=${candidate.confidence} -> ${decision.status}`,
+        );
       }
 
       normalized.unmappedGenreIds.forEach((id) => unmappedGenres.add(id));
