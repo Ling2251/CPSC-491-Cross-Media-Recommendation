@@ -10,6 +10,66 @@ RankedCandidate = Dict[str, object]
 MEDIA_TYPES = ("video", "audio", "text")
 
 
+def _validate_tag_vector(
+    vector: object,
+    name: str,
+) -> None:
+    """
+    Validate a tag-weight vector before calculating similarity.
+
+    Expected format:
+
+        {
+            "sci-fi": 0.8,
+            "adventure": 0.6,
+        }
+
+    Rules:
+    - The vector must be a dictionary.
+    - Tag names must be strings.
+    - Weights must be numeric.
+    - Boolean values are not accepted as numeric weights.
+    - Weights must be finite.
+    - Negative weights are rejected.
+
+    Negative-weight behavior:
+        Negative preference weights are not valid for the Friend
+        Recommendation subsystem. Sprint 2 produces non-negative
+        preference weights, so malformed negative values are rejected
+        with ValueError rather than silently clamped.
+    """
+
+    if not isinstance(vector, dict):
+        raise ValueError(
+            f"{name} must be a dictionary"
+        )
+
+    for tag, weight in vector.items():
+
+        if not isinstance(tag, str):
+            raise ValueError(
+                f"{name} tag names must be strings"
+            )
+
+        if (
+            isinstance(weight, bool)
+            or not isinstance(weight, (int, float))
+        ):
+            raise ValueError(
+                f"{name} weights must be numeric"
+            )
+
+        if not math.isfinite(weight):
+            raise ValueError(
+                f"{name} weights must be finite"
+            )
+
+        if weight < 0:
+            raise ValueError(
+                f"{name} weights cannot be negative"
+            )
+
+
 def cosine_similarity(
     vector_a: TagVector,
     vector_b: TagVector,
@@ -20,16 +80,30 @@ def cosine_similarity(
     Returns:
         float between 0.0 and 1.0
 
-    Examples:
+    Behavior:
         Identical vectors -> 1.0
         No shared tags    -> 0.0
         Partial overlap   -> between 0.0 and 1.0
+        Empty vector      -> 0.0
+
+    Invalid vectors and negative weights raise ValueError.
     """
+
+    _validate_tag_vector(
+        vector_a,
+        "vector_a",
+    )
+
+    _validate_tag_vector(
+        vector_b,
+        "vector_b",
+    )
 
     if not vector_a or not vector_b:
         return 0.0
 
-    # Use every tag that exists in either user's profile.
+    # Use every tag that exists in either user's vector.
+    # A tag missing from one vector contributes 0.
     all_tags = set(vector_a) | set(vector_b)
 
     dot_product = sum(
@@ -52,6 +126,7 @@ def cosine_similarity(
         )
     )
 
+    # Prevent division by zero for all-zero vectors.
     if magnitude_a == 0.0 or magnitude_b == 0.0:
         return 0.0
 
@@ -60,12 +135,91 @@ def cosine_similarity(
         / (magnitude_a * magnitude_b)
     )
 
-    # Protect against tiny floating-point errors such as
-    # 1.0000000000000002.
+    # Protect against tiny floating-point errors such as:
+    # 1.0000000000000002
     return max(
         0.0,
         min(1.0, similarity),
     )
+
+
+class CosineSimilarity:
+    """
+    Strategy wrapper for cosine similarity.
+
+    This allows the similarity algorithm to be used through
+    SimilarityContext and replaced later if another similarity
+    strategy is introduced.
+    """
+
+    def calculate(
+        self,
+        vector_a: TagVector,
+        vector_b: TagVector,
+    ) -> float:
+        return cosine_similarity(
+            vector_a,
+            vector_b,
+        )
+
+
+class SimilarityContext:
+    """
+    Context object that holds the active similarity strategy.
+
+    The strategy may be replaced at runtime as long as the
+    replacement provides a callable calculate() method.
+    """
+
+    def __init__(
+        self,
+        strategy: object,
+    ) -> None:
+        self.set_strategy(strategy)
+
+    @property
+    def strategy(self) -> object:
+        """
+        Return the currently active strategy.
+        """
+
+        return self._strategy
+
+    def set_strategy(
+        self,
+        strategy: object,
+    ) -> None:
+        """
+        Replace the active similarity strategy.
+        """
+
+        calculate_method = getattr(
+            strategy,
+            "calculate",
+            None,
+        )
+
+        if not callable(calculate_method):
+            raise ValueError(
+                "Similarity strategy must provide "
+                "a calculate() method"
+            )
+
+        self._strategy = strategy
+
+    def calculate(
+        self,
+        vector_a: TagVector,
+        vector_b: TagVector,
+    ) -> float:
+        """
+        Calculate similarity using the currently active strategy.
+        """
+
+        return self._strategy.calculate(
+            vector_a,
+            vector_b,
+        )
 
 
 def calculate_media_similarity(
@@ -110,14 +264,17 @@ def calculate_overall_similarity(
     """
     Calculate an overall similarity score.
 
-    Rule:
+    Rules:
 
-    - If BOTH users have no data for a category,
+    - If both users have no data for a category,
       ignore that category.
+
     - If one user has data and the other does not,
-      that category receives a similarity of 0.
+      that category receives similarity 0.
+
     - Average all active categories.
-    - If neither user has preference data,
+
+    - If neither user has any preference data,
       return 0.
     """
 
@@ -135,8 +292,8 @@ def calculate_overall_similarity(
             {},
         )
 
-        # If neither user uses this media category,
-        # it should not reduce their overall score.
+        # If neither user has data for this category,
+        # do not penalize their overall similarity.
         if not vector_a and not vector_b:
             continue
 
@@ -164,6 +321,7 @@ def calculate_user_similarity(
     similarity result between two users.
 
     Returns:
+
         {
             "overall": ...,
             "video": ...,
@@ -209,70 +367,119 @@ def rank_candidates(
     current_user_id: Optional[int] = None,
     limit: Optional[int] = None,
 ) -> List[RankedCandidate]:
-    """Score and rank candidates from highest to lowest overall similarity.
-
-    Each candidate must contain a positive integer ``user_id`` and a
-    ``preferences`` mapping in the same format as ``user_profile``. Other
-    candidate fields are preserved in the returned record, except the
-    preference vectors themselves.
     """
+    Score and rank candidates from highest to lowest
+    overall similarity.
+
+    Each candidate must contain:
+        - positive integer user_id
+        - preferences mapping
+
+    Additional candidate fields are preserved.
+
+    The raw preference vectors are not included in the
+    returned recommendation record.
+    """
+
     if current_user_id is not None and (
         isinstance(current_user_id, bool)
         or not isinstance(current_user_id, int)
         or current_user_id < 1
     ):
-        raise ValueError("current_user_id must be a positive integer")
+        raise ValueError(
+            "current_user_id must be a positive integer"
+        )
 
     if limit is not None and (
         isinstance(limit, bool)
         or not isinstance(limit, int)
         or limit < 0
     ):
-        raise ValueError("limit must be a non-negative integer")
+        raise ValueError(
+            "limit must be a non-negative integer"
+        )
 
     ranked: List[RankedCandidate] = []
     seen_user_ids = set()
 
     for candidate in candidates:
-        candidate_id = candidate.get("user_id")
+
+        candidate_id = candidate.get(
+            "user_id"
+        )
+
         if (
             isinstance(candidate_id, bool)
             or not isinstance(candidate_id, int)
             or candidate_id < 1
         ):
-            raise ValueError("Each candidate must have a positive integer user_id")
-        if candidate_id in seen_user_ids:
-            raise ValueError(f"Duplicate candidate user_id: {candidate_id}")
-        seen_user_ids.add(candidate_id)
+            raise ValueError(
+                "Each candidate must have a "
+                "positive integer user_id"
+            )
 
+        if candidate_id in seen_user_ids:
+            raise ValueError(
+                f"Duplicate candidate user_id: "
+                f"{candidate_id}"
+            )
+
+        seen_user_ids.add(
+            candidate_id
+        )
+
+        # Current user cannot recommend themselves.
         if candidate_id == current_user_id:
             continue
 
-        preferences = candidate.get("preferences")
-        if not isinstance(preferences, dict):
+        preferences = candidate.get(
+            "preferences"
+        )
+
+        if not isinstance(
+            preferences,
+            dict,
+        ):
             raise ValueError(
-                f"Candidate {candidate_id} must have a preferences mapping"
+                f"Candidate {candidate_id} must "
+                f"have a preferences mapping"
             )
 
         scores = calculate_user_similarity(
             user_profile,
             preferences,
         )
+
         result = {
             key: value
             for key, value in candidate.items()
             if key != "preferences"
         }
-        result["similarity_score"] = scores["overall"]
-        result["scores"] = scores
-        ranked.append(result)
 
+        result["similarity_score"] = (
+            scores["overall"]
+        )
+
+        result["scores"] = scores
+
+        ranked.append(
+            result
+        )
+
+    # Highest score first.
+    # user_id provides deterministic ordering for ties.
     ranked.sort(
         key=lambda candidate: (
-            -float(candidate["similarity_score"]),
-            int(candidate["user_id"]),
+            -float(
+                candidate["similarity_score"]
+            ),
+            int(
+                candidate["user_id"]
+            ),
         )
     )
+
     if limit is not None:
         return ranked[:limit]
+
     return ranked

@@ -1,0 +1,114 @@
+{
+  "user_a": {
+    "user_id": 1,
+    "username": "user_a",
+    "preferences": {
+      "video": {
+        "sci-fi": 0.8,
+        "adventure": 0.6
+      },
+      "audio": {
+        "rock": 1.0
+      },
+      "text": {
+        "fantasy": 1.0
+      }
+    }
+  },
+
+  "user_b": {
+    "user_id": 2,
+    "username": "user_b",
+    "preferences": {
+      "video": {
+        "sci-fi": 0.8,
+        "adventure": 0.6
+      },
+      "audio": {
+        "rock": 1.0
+      },
+      "text": {
+        "fantasy": 1.0
+      }
+    }
+  },
+
+  "user_c": {
+    "user_id": 3,
+    "username": "user_c",
+    "preferences": {
+      "video": {
+        "comedy": 1.0
+      },
+      "audio": {
+        "pop": 1.0
+      },
+      "text": {
+        "romance": 1.0
+      }
+    }
+  },
+
+  "user_d": {
+    "user_id": 4,
+    "username": "user_d",
+    "preferences": {
+      "video": {
+        "sci-fi": 1.0
+      },
+      "audio": {
+        "metal": 1.0
+      },
+      "text": {
+        "mystery": 1.0
+      }
+    }
+  },
+
+  "video_only": {
+    "user_id": 5,
+    "username": "video_only",
+    "preferences": {
+      "video": {
+        "sci-fi": 0.8,
+        "adventure": 0.6
+      },
+      "audio": {},
+      "text": {}
+    }
+  },
+
+  "audio_only": {
+    "user_id": 6,
+    "username": "audio_only",
+    "preferences": {
+      "video": {},
+      "audio": {
+        "rock": 1.0
+      },
+      "text": {}
+    }
+  },
+
+  "text_only": {
+    "user_id": 7,
+    "username": "text_only",
+    "preferences": {
+      "video": {},
+      "audio": {},
+      "text": {
+        "fantasy": 1.0
+      }
+    }
+  },
+
+  "empty_user": {
+    "user_id": 8,
+    "username": "empty_user",
+    "preferences": {
+      "video": {},
+      "audio": {},
+      "text": {}
+    }
+  }
+}
