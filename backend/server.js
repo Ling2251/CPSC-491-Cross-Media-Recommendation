@@ -5,6 +5,7 @@ const cors = require("cors")
 const pool = require("./db")
 const bcrypt = require("bcrypt")
 const jwt = require("jsonwebtoken")
+const friendshipRoutes = require("./routes/friendshipRoutes");
 
 const app = express()
 const PORT = 3001
@@ -12,6 +13,9 @@ const JWT_SECRET = process.env.JWT_SECRET
 
 app.use(cors())
 app.use(express.json())
+
+// Friendship API
+app.use("/api/friends", friendshipRoutes);
 
 // Middleware to verify JWT authentication
 function authenticateToken(req, res, next) {
