@@ -22,6 +22,29 @@ def test_candidates_are_ranked_by_overall_similarity():
     assert ranked[1]["similarity_score"] > ranked[2]["similarity_score"]
     assert "preferences" not in ranked[0]
     assert ranked[0]["scores"]["video"] == pytest.approx(1.0)
+    assert ranked[0]["shared_tags"] == ["adventure", "fantasy", "rock", "sci-fi"]
+    assert ranked[1]["shared_tags"] == ["sci-fi"]
+    assert ranked[2]["shared_tags"] == []
+
+
+def test_shared_tags_ignore_zero_weight_preferences():
+    user_profile = {
+        "video": {"sci-fi": 0.0, "adventure": 0.8},
+        "audio": {"rock": 0.5},
+        "text": {},
+    }
+    candidate = {
+        "user_id": 9,
+        "preferences": {
+            "video": {"sci-fi": 1.0, "adventure": 0.0},
+            "audio": {"rock": 0.0},
+            "text": {},
+        },
+    }
+
+    ranked = rank_candidates(user_profile, [candidate])
+
+    assert ranked[0]["shared_tags"] == []
 
 
 def test_ranking_excludes_current_user_and_applies_limit():
