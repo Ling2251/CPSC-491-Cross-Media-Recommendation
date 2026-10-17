@@ -8,7 +8,7 @@ import {
   getUserById,
 } from "../../services/privacyService";
 
-import FriendRequestCard from "./FriendRequestCard";
+import FriendRequestCard from "../../components/friends/FriendRequestCard";
 
 const FriendsPage = () => {
   // Temporary logged-in user.
