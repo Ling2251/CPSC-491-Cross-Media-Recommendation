@@ -29,6 +29,18 @@ describe("FriendSuggestionsPage", () => {
     expect(screen.queryByText("CrazyDave777")).not.toBeInTheDocument();
   });
 
+  test("shows recommendation cards in descending similarity order", () => {
+    render(<FriendSuggestionsPage />);
+
+    const recommendationNames = screen
+      .getByRole("region", { name: "Recommended users" })
+      .querySelectorAll(".fr-username");
+
+    expect(
+      Array.from(recommendationNames, (heading) => heading.textContent)
+    ).toEqual(["LoFiLuna", "BookishBen"]);
+  });
+
   test("filters recommendations by media category", () => {
     render(<FriendSuggestionsPage />);
 
