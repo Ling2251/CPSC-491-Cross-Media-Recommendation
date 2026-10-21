@@ -10,7 +10,7 @@
     "ingest:tmdb": "node ingest-tmdb.js",
     "test:threshold": "node test-threshold.js",
     "test:candidates": "node test-candidate-generator.js",
-    "test:profile": "node test-media-profile.js"
+    "test:profile": "node test-media-profile.js",
     "test:fetch": "node test-tmdb-fetch.js"
   },
   "dependencies": {
