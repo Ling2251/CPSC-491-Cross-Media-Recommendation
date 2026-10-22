@@ -1,6 +1,7 @@
 
 import { useState } from "react";
 import "./FriendsPage.css";
+import FriendsPageApi from "./FriendsPageApi";
 
 import { friendshipService } from "../../services/friendshipService.js";
 import {
@@ -10,7 +11,7 @@ import {
 
 import FriendRequestCard from "../../components/friends/FriendRequestCard";
 
-const FriendsPage = () => {
+const DemoFriendsPage = () => {
   // Temporary logged-in user.
   // Replace with authenticated user later.
   const currentUserId = 1;
@@ -303,6 +304,14 @@ const FriendsPage = () => {
       </section>
     </div>
   );
+};
+
+const FriendsPage = () => {
+  const useApi =
+    import.meta.env.VITE_FRIENDSHIP_MODE === "api" &&
+    import.meta.env.MODE !== "test";
+
+  return useApi ? <FriendsPageApi /> : <DemoFriendsPage />;
 };
 
 export default FriendsPage;
