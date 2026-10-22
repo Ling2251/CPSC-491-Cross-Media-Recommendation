@@ -23,6 +23,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+_metadata.json
 
 # Node
 node_modules/

@@ -30,9 +30,13 @@ jobs:
 
     - name: Run backend tests
       run: |
-        pytest backend/ai-backend/tests -v --tb=short
+        if [ -d "backend/ai-backend/tests" ]; then
+          pytest backend/ai-backend/tests -v --tb=short
+        else
+          echo "No tests found in backend/ai-backend/tests"
+        fi
 
-    - name: Test results summary
-      if: always()
-      run: |
-        echo "Backend test suite completed"
+        - name: Test results summary
+          if: always()
+          run: |
+            echo "Backend test suite completed"

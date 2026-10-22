@@ -8,7 +8,7 @@ import { friendshipService } from "../../services/friendshipService";
 import { FriendshipStatus } from "../../models/friendship";
 
 // Isolate FriendsPage from its child component.
-vi.mock("./FriendRequestCard", () => ({
+vi.mock("../../components/friends/FriendRequestCard", () => ({
   default: ({ request, onAccept, onDecline }) => (
     <article data-testid={`request-${request.id}`}>
       <p>Request from User {request.requesterId}</p>

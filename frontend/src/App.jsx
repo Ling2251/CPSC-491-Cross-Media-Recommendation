@@ -7,6 +7,7 @@ import FriendsPage from "./pages/Friends/FriendsPage";
 import Login from "./pages/Login";
 import Onboarding from "./pages/Onboarding";
 import Signup from "./pages/Signup";
+import FriendSuggestionsPage from "./pages/FriendSuggestionsPage";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -39,6 +40,7 @@ function App() {
       <Route path="/login" element={accountPage} />
       <Route path="/friends" element={<FriendsPage />} />
       <Route path="/manage-friends" element={<FriendsPage />} />
+      <Route path="/suggestions" element={<FriendSuggestionsPage />} />
       <Route path="/signup" element={<Signup />} />
       <Route path="*" element={accountPage} />
     </Routes>

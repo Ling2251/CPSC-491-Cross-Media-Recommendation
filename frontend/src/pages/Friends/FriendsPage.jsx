@@ -9,7 +9,7 @@ import {
   getUserById,
 } from "../../services/privacyService";
 
-import FriendRequestCard from "./FriendRequestCard";
+import FriendRequestCard from "../../components/friends/FriendRequestCard";
 
 const DemoFriendsPage = () => {
   // Temporary logged-in user.
@@ -106,6 +106,9 @@ const DemoFriendsPage = () => {
             Manage your friends and friend requests.
           </p>
         </div>
+        <a className="fr-btn-primary" href="/suggestions">
+          Find Friends
+        </a>
       </header>
 
       {message && (

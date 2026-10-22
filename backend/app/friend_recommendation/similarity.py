@@ -361,6 +361,23 @@ def calculate_user_similarity(
     }
 
 
+def _shared_tags(
+    profile_a: PreferenceProfile,
+    profile_b: PreferenceProfile,
+) -> List[str]:
+    """Return tags with positive preference weights in both profiles."""
+    shared_tags = set()
+    for media_type in MEDIA_TYPES:
+        vector_a = profile_a.get(media_type, {})
+        vector_b = profile_b.get(media_type, {})
+        shared_tags.update(
+            tag
+            for tag in vector_a.keys() & vector_b.keys()
+            if vector_a[tag] > 0 and vector_b[tag] > 0
+        )
+    return sorted(shared_tags)
+
+
 def rank_candidates(
     user_profile: PreferenceProfile,
     candidates: Iterable[Candidate],
@@ -461,6 +478,10 @@ def rank_candidates(
         )
 
         result["scores"] = scores
+        result["shared_tags"] = _shared_tags(
+            user_profile,
+            preferences,
+        )
 
         ranked.append(
             result
