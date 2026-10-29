@@ -78,6 +78,43 @@ def test_recalculate_loads_profiles_ranks_and_persists_scores():
     assert save_connection.closed
 
 
+def test_recalculate_updates_scores_after_preferences_change():
+    initial_load = FakeLoadConnection(
+        [7, 8],
+        [
+            (7, 1, "video", "consumed", None, ["sci-fi"]),
+            (8, 2, "video", "consumed", None, ["sci-fi"]),
+        ],
+    )
+    initial_save = FakeSaveConnection()
+    updated_load = FakeLoadConnection(
+        [7, 8],
+        [
+            (7, 1, "video", "consumed", None, ["sci-fi"]),
+            (8, 2, "video", "consumed", None, ["cooking"]),
+        ],
+    )
+    updated_save = FakeSaveConnection()
+    connections = iter(
+        [initial_load, initial_save, updated_load, updated_save]
+    )
+    connection_factory = lambda: next(connections)
+
+    initial_ranking = recalculate_friend_recommendations(
+        7,
+        connection_factory=connection_factory,
+    )
+    updated_ranking = recalculate_friend_recommendations(
+        7,
+        connection_factory=connection_factory,
+    )
+
+    assert initial_ranking[0]["similarity_score"] == pytest.approx(1.0)
+    assert updated_ranking[0]["similarity_score"] == pytest.approx(0.0)
+    assert "DELETE FROM friend_similarity_scores" in updated_save.executions[0][0]
+    assert updated_save.executions[1][1] == (7, 8, 0.0, 0.0, 0.0, 0.0)
+
+
 def test_recalculate_raises_for_missing_or_inactive_requesting_user():
     load_connection = FakeLoadConnection([8], [])
 
