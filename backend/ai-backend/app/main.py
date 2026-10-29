@@ -1,5 +1,6 @@
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import Depends, FastAPI, HTTPException, Query
 from app.models import RecommendationResponse
+from app.security import get_current_user_id
 from app.services.generator import DummyDataGenerator
 from app.services.validator import DataValidator
 from app.services.recommender import BaselineRecommender
@@ -56,7 +57,14 @@ def generate_data():
     }
 
 @app.get("/recommend/{user_id}")
-def get_recommendations(user_id: int, top_n: int = Query(default=5, ge=1)) -> RecommendationResponse:
+def get_recommendations(
+    user_id: int,
+    top_n: int = Query(default=5, ge=1),
+    current_user_id: int = Depends(get_current_user_id),
+) -> RecommendationResponse:
+    if current_user_id != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized to view these recommendations")
+
     user = next((u for u in users if u.user_id == user_id), None)
 
     if not user:
