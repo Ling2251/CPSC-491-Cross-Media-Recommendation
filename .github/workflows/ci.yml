@@ -36,7 +36,7 @@ jobs:
           echo "No tests found in backend/ai-backend/tests"
         fi
 
-        - name: Test results summary
-          if: always()
-          run: |
-            echo "Backend test suite completed"
+    - name: Test results summary
+      if: always()
+      run: |
+        echo "Backend test suite completed"
