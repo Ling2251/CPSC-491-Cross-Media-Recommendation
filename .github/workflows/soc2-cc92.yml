@@ -1,0 +1,19 @@
+name: SOC2 CC9.2 inventory checks
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  check-inventory:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate CC9.2 inventory
+        run: python3 security/check_third_party_inventory.py
+      - name: Run CC9.2 inventory unit tests
+        run: python3 -m unittest discover -s security/tests -v

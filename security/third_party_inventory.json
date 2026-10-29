@@ -1,0 +1,67 @@
+{
+  "control": "SOC 2 CC9.2",
+  "scope": "Cross-Media Recommendation System - all subsystems",
+  "risk_scale": {
+    "low": "Limited impact and low likelihood",
+    "medium": "Moderate availability, integrity or confidentiality impact",
+    "high": "Potential severe confidentiality, integrity or availability impact"
+  },
+  "providers": [
+    {
+      "id": "tmdb",
+      "name": "The Movie Database (TMDB)",
+      "category": "external_api",
+      "use": "Movie metadata ingestion into PostgreSQL",
+      "code_references": ["database/scripts/adapters/tmdb.js", "database/scripts/ingest-tmdb.js"],
+      "data_exchanged": "Movie metadata; API key for authentication to provider",
+      "risks": ["Malformed third-party metadata", "Provider outage or rate limits", "API key exposure"],
+      "risk_rating": "medium",
+      "mitigations": ["Validate and normalize metadata", "Handle upstream failures", "Keep API key out of source control"],
+      "owner": "CC9.2 control owner",
+      "assessment_status": "pending_verification",
+      "evidence": []
+    },
+    {
+      "id": "tvmaze",
+      "name": "TVMaze",
+      "category": "external_api",
+      "use": "TV-series metadata collection for recommendation catalog",
+      "code_references": ["backend/ai-backend/app/services/public_data.py"],
+      "data_exchanged": "Public television program metadata and search terms",
+      "risks": ["Malformed API response", "Temporary API outage or throttling"],
+      "risk_rating": "medium",
+      "mitigations": ["Bounded retries and HTTP timeout", "Validate media records"],
+      "owner": "CC9.2 control owner",
+      "assessment_status": "pending_verification",
+      "evidence": []
+    },
+    {
+      "id": "openlibrary",
+      "name": "Open Library",
+      "category": "external_api",
+      "use": "Book metadata collection for recommendation catalog",
+      "code_references": ["backend/ai-backend/app/services/public_data.py"],
+      "data_exchanged": "Public book metadata and search terms",
+      "risks": ["Malformed API response", "Temporary API outage or throttling"],
+      "risk_rating": "medium",
+      "mitigations": ["Bounded retries and HTTP timeout", "Validate media records"],
+      "owner": "CC9.2 control owner",
+      "assessment_status": "pending_verification",
+      "evidence": []
+    },
+    {
+      "id": "github",
+      "name": "GitHub and GitHub Actions",
+      "category": "development_platform",
+      "use": "Repository hosting, pull requests, and CI workflows",
+      "code_references": [".github/workflows/backend-ci.yml", ".github/workflows/database-ci.yml", ".github/workflows/frontend-ci.yml"],
+      "data_exchanged": "Source code, CI execution metadata and configured repository secrets",
+      "risks": ["Unauthorized repository access", "Accidental secret disclosure", "Compromised CI dependencies"],
+      "risk_rating": "high",
+      "mitigations": ["Review repository access and secret configuration", "Require review and successful checks before merge", "Minimize workflow token permissions"],
+      "owner": "CC9.2 control owner",
+      "assessment_status": "pending_verification",
+      "evidence": []
+    }
+  ]
+}
