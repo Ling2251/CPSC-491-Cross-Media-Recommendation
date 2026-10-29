@@ -295,3 +295,19 @@ Tests verify:
 - **Sprint 4**: Collaborative filtering and hybrid models
 - **Sprint 5**: Feedback loop and model retraining
 - **Sprint 6**: Deployment and frontend integration
+
+## Authentication (Sprint 4, SOC 2 CC6.1)
+
+Personalized recommendations require a JWT issued by the User Profile backend (backend/server.js, backend/routes/auth.js).
+
+- Send the token as Authorization: Bearer <token> on GET /recommend/{user_id}.
+- The token must be HS256-signed with the shared JWT_SECRET, unexpired, and carry exp and an integer userId claim.
+- A missing, malformed, expired, or wrongly signed token returns 401.
+- A valid token for a different user returns 403. The URL user ID is never trusted on its own.
+- If JWT_SECRET is not set, protected endpoints return 500 and deny access.
+
+Set JWT_SECRET in your environment, for example in a local .env file that is not committed. Use the same value as the Node backend. Never commit the real value.
+
+/health and /generate stay public. /generate only returns generated dummy data.
+
+Tests set a throwaway secret through tests/conftest.py, so no real secret is needed to run them.
