@@ -85,7 +85,7 @@ export default function LandingPage() {
         {/* LEFT SIDE */}
         <section className="auth-intro">
           <div className="auth-intro-content">
-            <h1>[ App Name ]</h1>
+            <h1>[ Cross Media Recommendations ]</h1>
 
             <p className="auth-description">
               Discover new media based on what you
