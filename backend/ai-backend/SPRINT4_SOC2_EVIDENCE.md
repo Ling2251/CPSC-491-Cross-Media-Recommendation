@@ -54,7 +54,7 @@ No Node code was changed. The AI backend verifies tokens in the same format, so 
 | Existing recommendation behavior unchanged | Verified | Existing 75 tests pass; output matches the recommender directly |
 | Fails closed without JWT_SECRET | Verified | test_server_without_jwt_secret_fails_closed |
 | Tokens from the real Node backend are accepted | Verified manually (not in pytest) | See section 7 |
-| CI runs the security tests | Pending | See section 8 |
+| CI runs the security tests | Verified | GitHub Actions Backend CI Tests run #81 on dfe02d7 (see section 8) |
 
 ## 6. Test results (actual, run locally)
 
@@ -85,8 +85,11 @@ The cross-check ran in a scratch directory outside the repository. The backend/n
 ## 8. GitHub Actions
 
 - The backend workflow (.github/workflows/backend-ci.yml) runs pytest backend/ai-backend/tests on pull requests to main and AI-Recommendation, and on pushes to main, AI-Recommendation, or feature/* branches (path-filtered to backend/ai-backend/).
-- No CI run exists yet for this branch. Its name (feat/...) does not match the workflow's feature/* push filter, so the workflow runs when a pull request into main is opened.
-- Status: pending. Replace this line with the run URL and result after the pull request runs.
+- Pull request: #33 (feat/sprint4-soc2-ai-security-maxwell into main).
+- Earlier run #80 (commit 190c534) FAILED with exit code 127. Cause: the 'Test results summary' step was indented inside the 'Run backend tests' shell block, so bash tried to run '- name:' as a command. Fixed in commit dfe02d7 by moving the step to step level.
+- Successful run: Backend CI Tests run #81, commit dfe02d7, pull request #33, result: Success (12s job, 15s total). https://github.com/Ling2251/CPSC-491-Cross-Media-Recommendation/actions/runs/40973872199
+- backend-ci.yml (Backend CI Tests, the dedicated AI backend workflow) also passed on the same pull request (run #9).
+- FriendsRecommendation CI/CD (run #94) was in progress at the time of writing and is not part of this change.
 
 ## 9. Reproducing the tests
 
