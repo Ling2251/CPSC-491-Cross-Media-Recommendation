@@ -22,6 +22,7 @@ const GENRE_MAP = {
 };
 
 function mapGenres(genreIds = []) {
+  if (!Array.isArray(genreIds)) genreIds = [];
   const mapped = [];
   const unmapped = [];
   for (const id of genreIds) {
@@ -71,12 +72,22 @@ function normalizeRecord(raw) {
   };
 }
 
-async function fetchWithRetry(url, { maxRetries = 5 } = {}) {
+async function fetchWithRetry(url, { maxRetries = 5, timeoutMs = 10000, fetchFn = fetch, sleepFn = (ms) => new Promise((resolve) => setTimeout(resolve, ms)) } = {}) {
   let attempt = 0;
   let delayMs = 1000;
 
   for (;;) {
-    const res = await fetch(url);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    let res;
+    try {
+      res = await fetchFn(url, { signal: controller.signal });
+    } catch (error) {
+      if (error.name === "AbortError") throw new Error("TMDb request timed out");
+      throw new Error("TMDb network request failed");
+    } finally {
+      clearTimeout(timer);
+    }
     if (res.ok) return res;
 
     const retryable = res.status === 429 || res.status >= 500;
@@ -86,17 +97,26 @@ async function fetchWithRetry(url, { maxRetries = 5 } = {}) {
 
     const retryAfterHeader = res.headers.get('retry-after');
     const waitMs = retryAfterHeader ? Number(retryAfterHeader) * 1000 : delayMs;
-    await new Promise((resolve) => setTimeout(resolve, waitMs));
+    await sleepFn(Number.isFinite(waitMs) && waitMs >= 0 ? waitMs : delayMs);
 
     delayMs = Math.min(delayMs * 2, 30000);
     attempt += 1;
   }
 }
 
-async function fetchMoviePage(apiKey, page) {
+async function fetchMoviePage(apiKey, page, options = {}) {
   const url = `https://api.themoviedb.org/3/discover/movie?api_key=${encodeURIComponent(apiKey)}&page=${page}`;
-  const res = await fetchWithRetry(url);
-  return res.json();
+  const res = await fetchWithRetry(url, options);
+  let payload;
+  try {
+    payload = await res.json();
+  } catch (error) {
+    throw new Error("TMDb returned invalid JSON");
+  }
+  if (!payload || !Array.isArray(payload.results)) {
+    throw new Error("TMDb returned malformed movie results");
+  }
+  return payload;
 }
 
 module.exports = {

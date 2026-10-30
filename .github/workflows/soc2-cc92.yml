@@ -17,3 +17,13 @@ jobs:
         run: python3 security/check_third_party_inventory.py
       - name: Run CC9.2 inventory unit tests
         run: python3 -m unittest discover -s security/tests -v
+      - name: Install AI collector test dependencies
+        run: python3 -m pip install -r backend/ai-backend/requirements.txt
+      - name: Run external API resilience tests (TVMaze and Open Library)
+        run: python3 -m pytest backend/ai-backend/tests/test_public_data.py backend/ai-backend/tests/test_cc92_external_api_security.py -q
+      - name: Set up Node.js for TMDB checks
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Run external API resilience tests (TMDB)
+        run: node security/tests/test_tmdb_cc92.js
