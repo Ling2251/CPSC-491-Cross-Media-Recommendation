@@ -1,102 +1,114 @@
-// Tests the Open Library adapter's pure normalization/mapping logic. No
-// network or database needed -- mirrors test-tmdb-adapter.js's structure for
-// the other provider.
-const assert = require('assert');
-const { normalizeRecord, mapSubjects } = require('./adapters/openlibrary');
+// Open Library ETL adapter — Sprint 4 (second media provider, media_type='book').
+// Mirrors adapters/tmdb.js's contract so the ingest pipeline can eventually
+// treat providers interchangeably: normalizeRecord/fetchWithRetry are kept
+// separate so the pure mapping logic can be unit tested without the network.
+// No API key is required for Open Library's search endpoint.
 
-function testValidFullyPopulated() {
-  const result = normalizeRecord({
-    key: '/works/OL45883W',
-    title: 'The Hobbit',
-    first_publish_year: 1937,
-    cover_i: 258027,
-    subject: ['Fantasy fiction', 'Fiction'],
-  });
-  assert.strictEqual(result.valid, true);
-  assert.strictEqual(result.media.title, 'The Hobbit');
-  assert.strictEqual(result.media.externalId, 'OL45883W');
-  assert.strictEqual(result.media.externalSource, 'openlibrary');
-  assert.strictEqual(result.media.mediaType, 'book');
-  assert.strictEqual(result.media.releaseDate, '1937-01-01');
-  assert.ok(result.media.coverImageUrl.endsWith('/258027-M.jpg'));
-  assert.deepStrictEqual(result.tagNames, ['Fantasy']);
-  assert.deepStrictEqual(result.unmappedSubjects, ['Fiction']);
-  console.log('PASS  valid fully-populated record normalizes correctly');
+const COVER_IMAGE_BASE_URL = 'https://covers.openlibrary.org/b/id';
+
+// Open Library subject string (lowercased) -> internal tag_taxonomy (name, category).
+// Only subjects with an existing seeded tag are mapped; everything else is
+// left unmapped on purpose, same policy as TMDb's GENRE_MAP.
+const SUBJECT_MAP = {
+  'fantasy fiction': { name: 'Fantasy', category: 'genre' },
+  'science fiction': { name: 'Sci-Fi', category: 'genre' },
+  'mystery fiction': { name: 'Mystery', category: 'genre' },
+  'detective and mystery stories': { name: 'Mystery', category: 'genre' },
+  'romance fiction': { name: 'Romance', category: 'genre' },
+  'horror fiction': { name: 'Horror', category: 'genre' },
+  'humorous fiction': { name: 'Comedy', category: 'genre' },
+  thrillers: { name: 'Thriller', category: 'genre' },
+  'young adult fiction': { name: 'Young Adult', category: 'audience' },
+  'juvenile fiction': { name: 'Children', category: 'audience' },
+};
+
+function mapSubjects(subjects = []) {
+  const mapped = [];
+  const unmapped = [];
+  for (const subject of subjects) {
+    const key = typeof subject === 'string' ? subject.trim().toLowerCase() : '';
+    const tag = SUBJECT_MAP[key];
+    if (tag) mapped.push(tag);
+    else unmapped.push(subject);
+  }
+  return { mapped, unmapped };
 }
 
-function testValidMissingCover() {
-  const result = normalizeRecord({
-    key: '/works/OL123456W',
-    title: 'Example Indie Novel',
-    subject: ['Romance fiction'],
-  });
-  assert.strictEqual(result.valid, true);
-  assert.strictEqual(result.media.coverImageUrl, null);
-  assert.deepStrictEqual(result.tagNames, ['Romance']);
-  console.log('PASS  missing cover_i maps to null cover_image_url');
+function normalizeRecord(raw) {
+  const errors = [];
+  const key = raw && typeof raw.key === 'string' ? raw.key : null;
+  const externalId = key ? key.replace(/^\/works\//, '') : null;
+  const title = raw && typeof raw.title === 'string' ? raw.title.trim() : '';
+
+  if (!externalId) errors.push('missing key');
+  if (!title) errors.push('missing title');
+
+  if (errors.length > 0) {
+    return { valid: false, errors, raw };
+  }
+
+  let releaseDate = null;
+  const year = raw.first_publish_year;
+  if (Number.isFinite(year) && year > 0) {
+    releaseDate = `${year}-01-01`;
+  }
+
+  const coverImageUrl = Number.isFinite(raw.cover_i)
+    ? `${COVER_IMAGE_BASE_URL}/${raw.cover_i}-M.jpg`
+    : null;
+
+  const { mapped, unmapped } = mapSubjects(raw.subject);
+
+  return {
+    valid: true,
+    media: {
+      title,
+      mediaType: 'book',
+      externalSource: 'openlibrary',
+      externalId,
+      description: null,
+      releaseDate,
+      coverImageUrl,
+    },
+    tagNames: mapped.map((tag) => tag.name),
+    tagCategories: mapped,
+    unmappedSubjects: unmapped,
+  };
 }
 
-function testValidUnmappedSubject() {
-  const result = normalizeRecord({
-    key: '/works/OL789012W',
-    title: 'Adventure Tale',
-    subject: ['Humorous fiction', 'Swashbucklers'],
-  });
-  assert.strictEqual(result.valid, true);
-  assert.deepStrictEqual(result.tagNames, ['Comedy']);
-  assert.deepStrictEqual(result.unmappedSubjects, ['Swashbucklers']);
-  console.log('PASS  unmapped subject is logged, not applied as a tag');
+async function fetchWithRetry(url, { maxRetries = 5 } = {}) {
+  let attempt = 0;
+  let delayMs = 1000;
+
+  for (;;) {
+    const res = await fetch(url);
+    if (res.ok) return res;
+
+    const retryable = res.status === 429 || res.status >= 500;
+    if (!retryable || attempt >= maxRetries) {
+      throw new Error(`Open Library request failed: ${res.status} ${res.statusText}`);
+    }
+
+    const retryAfterHeader = res.headers.get('retry-after');
+    const waitMs = retryAfterHeader ? Number(retryAfterHeader) * 1000 : delayMs;
+    await new Promise((resolve) => setTimeout(resolve, waitMs));
+
+    delayMs = Math.min(delayMs * 2, 30000);
+    attempt += 1;
+  }
 }
 
-function testMalformedMissingTitle() {
-  const result = normalizeRecord({ key: '/works/OL345678W', title: '' });
-  assert.strictEqual(result.valid, false);
-  assert.ok(result.errors.includes('missing title'));
-  console.log('PASS  missing title is rejected');
+async function fetchSearchPage(subject, page) {
+  const url = `https://openlibrary.org/search.json?subject=${encodeURIComponent(subject)}&page=${page}`;
+  const res = await fetchWithRetry(url);
+  return res.json();
 }
 
-function testMalformedMissingKey() {
-  const result = normalizeRecord({ key: null, title: 'No Key Book' });
-  assert.strictEqual(result.valid, false);
-  assert.ok(result.errors.includes('missing key'));
-  console.log('PASS  missing key is rejected');
-}
-
-function testBadPublishYear() {
-  const result = normalizeRecord({
-    key: '/works/OL999999W',
-    title: 'Undated Book',
-    first_publish_year: 'not-a-year',
-  });
-  assert.strictEqual(result.valid, true);
-  assert.strictEqual(result.media.releaseDate, null);
-  console.log('PASS  non-numeric first_publish_year becomes null without rejecting the record');
-}
-
-function testMapSubjectsCaseInsensitive() {
-  const { mapped, unmapped } = mapSubjects(['SCIENCE FICTION', 'Made Up Subject']);
-  assert.strictEqual(mapped.length, 1);
-  assert.strictEqual(mapped[0].name, 'Sci-Fi');
-  assert.deepStrictEqual(unmapped, ['Made Up Subject']);
-  console.log('PASS  subject mapping is case-insensitive');
-}
-
-function testMapSubjectsEmpty() {
-  assert.deepStrictEqual(mapSubjects(), { mapped: [], unmapped: [] });
-  assert.deepStrictEqual(mapSubjects([]), { mapped: [], unmapped: [] });
-  console.log('PASS  mapSubjects handles missing/empty input without throwing');
-}
-
-function main() {
-  testValidFullyPopulated();
-  testValidMissingCover();
-  testValidUnmappedSubject();
-  testMalformedMissingTitle();
-  testMalformedMissingKey();
-  testBadPublishYear();
-  testMapSubjectsCaseInsensitive();
-  testMapSubjectsEmpty();
-  console.log('\nAll Open Library adapter tests passed.');
-}
-
-main();
+module.exports = {
+  COVER_IMAGE_BASE_URL,
+  SUBJECT_MAP,
+  mapSubjects,
+  normalizeRecord,
+  fetchWithRetry,
+  fetchSearchPage,
+};
