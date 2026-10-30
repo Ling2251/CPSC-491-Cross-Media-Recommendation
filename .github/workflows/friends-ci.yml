@@ -125,6 +125,25 @@ jobs:
     needs: version
     timeout-minutes: 10
 
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: friend_recommendation_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d friend_recommendation_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/friend_recommendation_test
+      FRIEND_RECOMMENDATION_TEST_DATABASE: "1"
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -143,6 +162,20 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r backend/requirements.txt
           python -m pip install -r backend/ai-backend/requirements.txt
+
+      - name: Apply database migrations for integration tests
+        run: |
+          python - <<'PY'
+          import os
+          from pathlib import Path
+
+          import psycopg
+
+          migrations = sorted(Path("database/migrations").glob("*.sql"))
+          with psycopg.connect(os.environ["DATABASE_URL"], autocommit=True) as connection:
+              for migration in migrations:
+                  connection.execute(migration.read_text(encoding="utf-8"))
+          PY
 
       - name: Run Friend Recommendation Python tests
         working-directory: backend
