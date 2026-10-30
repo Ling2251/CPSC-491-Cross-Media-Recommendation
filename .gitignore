@@ -1,4 +1,11 @@
-# Python virtual environment for SOC 2 CC9.2 testing
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Python virtual environments
+.venv/
 .venv-cc92/
+
 # macOS metadata
 .DS_Store
