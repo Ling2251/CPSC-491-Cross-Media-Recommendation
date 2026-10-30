@@ -76,6 +76,7 @@ export default function LandingPage() {
           <a href="/">Home</a>
           <a href="/discover">Discover</a>
           <a href="/friends">Friends</a>
+          <a href="/suggestions">Friend Suggestions</a>
           <a href="/forums">Forums</a>
           <a href="/profile">Profile</a>
         </nav>
