@@ -40,6 +40,23 @@ function authenticateToken(req, res, next) {
   }
 }
 
+/* db debugger
+app.get("/api/debug/database", async (req, res) => {
+  try {
+    const result = await pool.query(
+      "SELECT current_database() AS database, current_user AS username"
+    );
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error("Database connection error:", error.message);
+
+    res.status(500).json({
+      message: "Database connection failed"
+    });
+  }
+}); */
+
 //test if backend is connected to frontend
 app.get("/api/test", (req, res) => {
   res.json({
