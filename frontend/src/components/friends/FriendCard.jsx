@@ -1,30 +1,5 @@
 
-import { useState } from "react";
-import { friendshipService } from "../../services/friendshipservices";
-
-const FriendCard = ({ user }) => {
-  const currentUserId = 1;
-
-  const [requestState, setRequestState] = useState("idle");
-  const [message, setMessage] = useState("");
-
-  const handleAddFriend = () => {
-    setMessage("");
-
-    const result = friendshipService.sendRequest(
-      currentUserId,
-      Number(user.id)
-    );
-
-    setMessage(result.message);
-
-    if (result.success) {
-      setRequestState("sent");
-    } else {
-      setRequestState("idle");
-    }
-  };
-
+const FriendCard = ({ user, requestSent, onAddFriend, onViewProfile }) => {
   const scorePct = Math.round(user.similarity_score * 100);
 
   return (
@@ -70,6 +45,7 @@ const FriendCard = ({ user }) => {
         <button
           type="button"
           className="fr-btn-secondary"
+          onClick={() => onViewProfile(user)}
         >
           View Profile
         </button>
@@ -77,20 +53,14 @@ const FriendCard = ({ user }) => {
         <button
           type="button"
           className="fr-btn-primary"
-          onClick={handleAddFriend}
-          disabled={requestState === "sent"}
+          onClick={() => onAddFriend(user)}
+          disabled={requestSent}
         >
-          {requestState === "sent"
+          {requestSent
             ? "Request Sent ✓"
             : "Add Friend"}
         </button>
       </div>
-
-      {message && (
-        <p className="fr-subtitle" role="status">
-          {message}
-        </p>
-      )}
     </article>
   );
 };

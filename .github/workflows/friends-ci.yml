@@ -134,30 +134,28 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
+          cache-dependency-path: |
+            backend/requirements.txt
+            backend/ai-backend/requirements.txt
 
       - name: Install backend dependencies
-        shell: bash
         run: |
           python -m pip install --upgrade pip
+          python -m pip install -r backend/requirements.txt
+          python -m pip install -r backend/ai-backend/requirements.txt
 
-          if [ -f "backend/requirements.txt" ]; then
-            pip install -r backend/requirements.txt
-          fi
+      - name: Run Friend Recommendation Python tests
+        working-directory: backend
+        run: >-
+          python -m pytest
+          tests/test_friend_*.py
+          tests/test_similarity.py
+          tests/test_similarity_test_data.py
+          -v --tb=short
 
-          if [ -f "backend/ai-backend/requirements.txt" ]; then
-            pip install -r backend/ai-backend/requirements.txt
-          fi
-
-      - name: Run backend Python tests if ready
-        shell: bash
-        run: |
-          if [ -d "backend/tests" ] && [ -f "backend/app/models.py" ] && [ -d "backend/app/services" ]; then
-            cd backend
-            python -m pytest tests -v --tb=short
-          else
-            echo "Backend test suite is not ready yet for this Sprint; skipping Python CI validation."
-            echo "Expected files: backend/app/models.py and backend/app/services/"
-          fi
+      - name: Run AI backend Python tests
+        working-directory: backend/ai-backend
+        run: python -m pytest tests -v --tb=short
 
       - name: Python test summary
         if: always()

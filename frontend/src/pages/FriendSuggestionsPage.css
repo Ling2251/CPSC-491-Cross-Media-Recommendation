@@ -1,0 +1,122 @@
+.suggestions-page .suggestions-header {
+  align-items: flex-start;
+  gap: 24px;
+}
+
+.suggestions-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.suggestions-header-actions a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.suggestions-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+
+.suggestions-filter {
+  padding: 9px 18px;
+  color: #dddddd;
+  background: #1b1b1b;
+  border: 1px solid #555555;
+  border-radius: 24px;
+}
+
+.suggestions-filter:hover,
+.suggestions-filter.is-active {
+  color: #ffffff;
+  background: #ed6227;
+  border-color: #ed6227;
+}
+
+.suggestions-message {
+  margin: -20px 0 24px;
+  color: #f59b74;
+}
+
+.suggestions-page .fr-score-bar {
+  height: 8px;
+  overflow: hidden;
+  background: #383838;
+  border-radius: 8px;
+}
+
+.suggestions-page .fr-score-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ed6227, #ffad69);
+  border-radius: inherit;
+}
+
+.suggestions-dialog-backdrop {
+  position: fixed;
+  z-index: 10;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgb(0 0 0 / 72%);
+}
+
+.suggestions-dialog {
+  position: relative;
+  display: flex;
+  width: min(100%, 480px);
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 32px;
+  color: #ffffff;
+  background: #1b1b1b;
+  border: 1px solid #474747;
+  border-radius: 18px;
+}
+
+.suggestions-dialog h2 {
+  overflow-wrap: anywhere;
+}
+
+.suggestions-dialog p {
+  color: #aaaaaa;
+  line-height: 1.6;
+}
+
+.suggestions-dialog-close {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  color: #ffffff;
+  background: transparent;
+  border: 0;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.suggestions-page button:focus-visible,
+.suggestions-page a:focus-visible {
+  outline: 3px solid #ff9b6b;
+  outline-offset: 3px;
+}
+
+@media (max-width: 700px) {
+  .suggestions-page .suggestions-header {
+    flex-direction: column;
+  }
+
+  .suggestions-header-actions {
+    justify-content: flex-start;
+  }
+
+  .suggestions-header-actions > * {
+    flex: 1 1 auto;
+  }
+}
