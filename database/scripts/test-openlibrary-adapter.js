@@ -87,6 +87,30 @@ function testMapSubjectsEmpty() {
   console.log('PASS  mapSubjects handles missing/empty input without throwing');
 }
 
+// Sprint 4: these subjects have no movie-era equivalent in
+// seed_initial_tags.sql, so seed/seed_book_tags.sql adds them as new
+// tag_taxonomy rows rather than reusing an unrelated genre.
+function testBookSpecificSubjectsMapToNewTaxonomy() {
+  const result = normalizeRecord({
+    key: '/works/OL111111W',
+    title: 'A Life Well Lived',
+    subject: ['Biography', 'Nonfiction'],
+  });
+  assert.strictEqual(result.valid, true);
+  assert.deepStrictEqual(result.tagNames.slice().sort(), ['Biography', 'Non-Fiction']);
+  console.log('PASS  biography/nonfiction subjects map to the new book-specific taxonomy');
+}
+
+function testSubjectAliasesNormalizeToTheSameTag() {
+  const autobiography = mapSubjects(['Autobiography']);
+  const nonFictionHyphenated = mapSubjects(['Non-Fiction']);
+  const classics = mapSubjects(['Classics']);
+  assert.strictEqual(autobiography.mapped[0].name, 'Biography');
+  assert.strictEqual(nonFictionHyphenated.mapped[0].name, 'Non-Fiction');
+  assert.strictEqual(classics.mapped[0].name, 'Classic Literature');
+  console.log('PASS  subject aliases (autobiography/non-fiction/classics) normalize to the same tag');
+}
+
 function main() {
   testValidFullyPopulated();
   testValidMissingCover();
@@ -96,6 +120,8 @@ function main() {
   testBadPublishYear();
   testMapSubjectsCaseInsensitive();
   testMapSubjectsEmpty();
+  testBookSpecificSubjectsMapToNewTaxonomy();
+  testSubjectAliasesNormalizeToTheSameTag();
   console.log('\nAll Open Library adapter tests passed.');
 }
 
