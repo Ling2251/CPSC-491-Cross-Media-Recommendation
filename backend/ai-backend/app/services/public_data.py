@@ -100,7 +100,10 @@ class PublicDataCollector:
                     continue
 
                 response.raise_for_status()
-                return response.json()
+                try:
+                    return response.json()
+                except ValueError as exc:
+                    raise ValueError("Invalid JSON from external media provider") from exc
 
             except requests.RequestException as exc:
                 last_error = exc
@@ -127,8 +130,16 @@ class TVMazeCollector(PublicDataCollector):
         payload = self._request_json(self.BASE_URL, params={"q": query})
         records: List[Media] = []
 
+        if not isinstance(payload, list):
+            raise ValueError("Invalid TVMaze response: expected a list")
         for result in payload[:limit]:
+            if not isinstance(result, dict):
+                logger.warning("Skipping malformed TVMaze result")
+                continue
             show = result.get("show") or {}
+            if not isinstance(show, dict):
+                logger.warning("Skipping malformed TVMaze show")
+                continue
             normalized = self._normalize_show(show)
             if normalized:
                 records.append(normalized)
@@ -195,8 +206,13 @@ class OpenLibraryCollector(PublicDataCollector):
             headers={"User-Agent": self.user_agent},
         )
 
+        if not isinstance(payload, dict) or not isinstance(payload.get("docs"), list):
+            raise ValueError("Invalid Open Library response: expected docs list")
         records: List[Media] = []
-        for doc in (payload.get("docs") or [])[:limit]:
+        for doc in payload["docs"][:limit]:
+            if not isinstance(doc, dict):
+                logger.warning("Skipping malformed Open Library document")
+                continue
             normalized = self._normalize_book(doc)
             if normalized:
                 records.append(normalized)

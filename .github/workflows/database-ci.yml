@@ -103,6 +103,10 @@ jobs:
         working-directory: database/scripts
         run: npm run test:profile
 
+      - name: Run TMDb fetch/retry tests
+        working-directory: database/scripts
+        run: npm run test:fetch
+
       - name: Record build version
         run: |
           MIGRATION_COUNT=$(ls database/migrations/*.sql | wc -l)

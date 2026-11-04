@@ -1,3 +1,16 @@
+# Python environments
+.venv/
+.venv-cc92/
+__pycache__/
+*.pyc
+
+# Environment secrets
+.env
+.env.*
+!.env.example
+
+# macOS files
+.DS_Store
 # Node dependencies and build output
 node_modules/
 dist/
