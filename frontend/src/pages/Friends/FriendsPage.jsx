@@ -308,7 +308,7 @@ const DemoFriendsPage = () => {
 
 const FriendsPage = () => {
   const useApi =
-    import.meta.env.VITE_FRIENDSHIP_MODE === "api" &&
+    import.meta.env.VITE_FRIENDSHIP_MODE !== "demo" &&
     import.meta.env.MODE !== "test";
 
   return useApi ? <FriendsPageApi /> : <DemoFriendsPage />;
