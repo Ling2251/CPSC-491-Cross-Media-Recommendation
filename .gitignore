@@ -1,4 +1,20 @@
+<<<<<<< Updated upstream
 # Environment files
+=======
+# Node dependencies and build output
+node_modules/
+dist/
+
+# Python environments, caches, and generated files
+.venv/
+venv/
+__pycache__/
+.pytest_cache/
+*.py[cod]
+.venv-cc92
+
+# Local configuration and operating-system files
+>>>>>>> Stashed changes
 .env
 .env.*
 !.env.example
