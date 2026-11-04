@@ -9,6 +9,10 @@ const COVER_IMAGE_BASE_URL = 'https://covers.openlibrary.org/b/id';
 // Open Library subject string (lowercased) -> internal tag_taxonomy (name, category).
 // Only subjects with an existing seeded tag are mapped; everything else is
 // left unmapped on purpose, same policy as TMDb's GENRE_MAP.
+//
+// Non-Fiction/Biography/Poetry/Classic Literature have no movie-era
+// equivalent in seed_initial_tags.sql, so they're added by
+// seed/seed_book_tags.sql (Sprint 4) rather than reusing an unrelated tag.
 const SUBJECT_MAP = {
   'fantasy fiction': { name: 'Fantasy', category: 'genre' },
   'science fiction': { name: 'Sci-Fi', category: 'genre' },
@@ -20,6 +24,13 @@ const SUBJECT_MAP = {
   thrillers: { name: 'Thriller', category: 'genre' },
   'young adult fiction': { name: 'Young Adult', category: 'audience' },
   'juvenile fiction': { name: 'Children', category: 'audience' },
+  nonfiction: { name: 'Non-Fiction', category: 'genre' },
+  'non-fiction': { name: 'Non-Fiction', category: 'genre' },
+  biography: { name: 'Biography', category: 'genre' },
+  autobiography: { name: 'Biography', category: 'genre' },
+  poetry: { name: 'Poetry', category: 'genre' },
+  'classic literature': { name: 'Classic Literature', category: 'genre' },
+  classics: { name: 'Classic Literature', category: 'genre' },
 };
 
 function mapSubjects(subjects = []) {
