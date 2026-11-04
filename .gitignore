@@ -1,27 +1,13 @@
-<<<<<<< Updated upstream
-# Environment files
-=======
-# Node dependencies and build output
-node_modules/
-dist/
-
-# Python environments, caches, and generated files
+# Python environments
 .venv/
-venv/
+.venv-cc92/
 __pycache__/
-.pytest_cache/
-*.py[cod]
-.venv-cc92
+*.pyc
 
-# Local configuration and operating-system files
->>>>>>> Stashed changes
+# Environment secrets
 .env
 .env.*
 !.env.example
 
-# Python virtual environments
-.venv/
-.venv-cc92/
-
-# macOS metadata
+# macOS files
 .DS_Store
