@@ -59,7 +59,14 @@ def _validate_tag_vector(
                 f"{name} weights must be numeric"
             )
 
-        if not math.isfinite(weight):
+        try:
+            is_finite = math.isfinite(weight)
+        except OverflowError as error:
+            raise ValueError(
+                f"{name} weights must be finite numbers"
+            ) from error
+
+        if not is_finite:
             raise ValueError(
                 f"{name} weights must be finite"
             )
@@ -67,6 +74,23 @@ def _validate_tag_vector(
         if weight < 0:
             raise ValueError(
                 f"{name} weights cannot be negative"
+            )
+
+
+def _validate_preference_profile(
+    profile: object,
+    name: str,
+) -> None:
+    if not isinstance(profile, Mapping):
+        raise ValueError(
+            f"{name} must be a mapping"
+        )
+
+    for media_type in MEDIA_TYPES:
+        if media_type in profile:
+            _validate_tag_vector(
+                profile[media_type],
+                f"{name}.{media_type}",
             )
 
 
@@ -102,38 +126,34 @@ def cosine_similarity(
     if not vector_a or not vector_b:
         return 0.0
 
-    # Use every tag that exists in either user's vector.
-    # A tag missing from one vector contributes 0.
-    all_tags = set(vector_a) | set(vector_b)
+    scale_a = max(vector_a.values())
+    scale_b = max(vector_b.values())
 
-    dot_product = sum(
-        vector_a.get(tag, 0.0)
-        * vector_b.get(tag, 0.0)
-        for tag in all_tags
-    )
-
-    magnitude_a = math.sqrt(
-        sum(
-            value ** 2
-            for value in vector_a.values()
-        )
-    )
-
-    magnitude_b = math.sqrt(
-        sum(
-            value ** 2
-            for value in vector_b.values()
-        )
-    )
-
-    # Prevent division by zero for all-zero vectors.
-    if magnitude_a == 0.0 or magnitude_b == 0.0:
+    # Scaling before squaring avoids overflow for large, finite weights.
+    if scale_a == 0 or scale_b == 0:
         return 0.0
 
-    similarity = (
-        dot_product
-        / (magnitude_a * magnitude_b)
+    normalized_a = {
+        tag: weight / scale_a
+        for tag, weight in vector_a.items()
+    }
+    normalized_b = {
+        tag: weight / scale_b
+        for tag, weight in vector_b.items()
+    }
+
+    magnitude_a = math.sqrt(
+        sum(weight ** 2 for weight in normalized_a.values())
     )
+    magnitude_b = math.sqrt(
+        sum(weight ** 2 for weight in normalized_b.values())
+    )
+    dot_product = sum(
+        normalized_a[tag] * normalized_b[tag]
+        for tag in normalized_a.keys() & normalized_b.keys()
+    )
+
+    similarity = dot_product / (magnitude_a * magnitude_b)
 
     # Protect against tiny floating-point errors such as:
     # 1.0000000000000002
@@ -241,6 +261,9 @@ def calculate_media_similarity(
             f"Invalid media type: {media_type}"
         )
 
+    _validate_preference_profile(profile_a, "profile_a")
+    _validate_preference_profile(profile_b, "profile_b")
+
     vector_a = profile_a.get(
         media_type,
         {},
@@ -277,6 +300,9 @@ def calculate_overall_similarity(
     - If neither user has any preference data,
       return 0.
     """
+
+    _validate_preference_profile(profile_a, "profile_a")
+    _validate_preference_profile(profile_b, "profile_b")
 
     category_scores = []
 
@@ -398,6 +424,8 @@ def rank_candidates(
     returned recommendation record.
     """
 
+    _validate_preference_profile(user_profile, "user_profile")
+
     if current_user_id is not None and (
         isinstance(current_user_id, bool)
         or not isinstance(current_user_id, int)
@@ -416,10 +444,22 @@ def rank_candidates(
             "limit must be a non-negative integer"
         )
 
+    try:
+        candidate_iterator = iter(candidates)
+    except TypeError as error:
+        raise ValueError(
+            "candidates must be iterable"
+        ) from error
+
     ranked: List[RankedCandidate] = []
     seen_user_ids = set()
 
-    for candidate in candidates:
+    for candidate in candidate_iterator:
+
+        if not isinstance(candidate, Mapping):
+            raise ValueError(
+                "Each candidate must be a mapping"
+            )
 
         candidate_id = candidate.get(
             "user_id"
@@ -453,10 +493,7 @@ def rank_candidates(
             "preferences"
         )
 
-        if not isinstance(
-            preferences,
-            dict,
-        ):
+        if not isinstance(preferences, Mapping):
             raise ValueError(
                 f"Candidate {candidate_id} must "
                 f"have a preferences mapping"

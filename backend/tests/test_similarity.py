@@ -475,6 +475,40 @@ class TestSimilarityEdgeCases:
                 },
             )
 
+    def test_unrepresentably_large_integer_weight_is_rejected_cleanly(
+        self,
+    ):
+        with pytest.raises(
+            ValueError,
+            match="weights must be finite numbers",
+        ):
+            cosine_similarity(
+                {"sci-fi": 10**400},
+                {"sci-fi": 1.0},
+            )
+
+    def test_large_finite_weights_do_not_overflow(
+        self,
+    ):
+        score = cosine_similarity(
+            {"sci-fi": 1e308},
+            {"sci-fi": 1e308},
+        )
+
+        assert score == pytest.approx(1.0)
+
+    def test_non_mapping_profile_is_rejected_cleanly(
+        self,
+    ):
+        with pytest.raises(
+            ValueError,
+            match="profile_a must be a mapping",
+        ):
+            calculate_user_similarity(
+                None,
+                {},
+            )
+
 
     def test_similarity_context_can_swap_strategy(
         self,
