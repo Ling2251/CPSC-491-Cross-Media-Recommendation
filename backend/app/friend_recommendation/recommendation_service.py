@@ -4,7 +4,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from .database_service import (
     UserNotFoundError,
-    load_accepted_friend_ids,
+    load_recommendation_excluded_ids,
     load_active_user_names,
     load_active_user_preference_profiles,
 )
@@ -81,8 +81,9 @@ def recalculate_friend_recommendations(
     """Rank all other active users for ``user_id`` and persist their scores.
 
     Profiles are built from each active user's media interactions and approved
-    tags. Existing accepted friends and the requesting user are excluded; the
-    remaining ranking is persisted and returned.
+    tags. Existing accepted friends, recipients of the user's pending outgoing
+    requests, and the requesting user are excluded; the remaining ranking is
+    persisted and returned.
     """
     if isinstance(user_id, bool) or not isinstance(user_id, int) or user_id < 1:
         raise ValueError("user_id must be a positive integer")
@@ -94,14 +95,14 @@ def recalculate_friend_recommendations(
     if user_profile is None:
         raise UserNotFoundError(f"Active user {user_id} does not exist")
 
-    accepted_friend_ids = load_accepted_friend_ids(
+    excluded_user_ids = load_recommendation_excluded_ids(
         user_id,
         connection_factory=connection_factory,
     )
     candidates = [
         {"user_id": candidate_id, "preferences": profile}
         for candidate_id, profile in profiles.items()
-        if candidate_id != user_id and candidate_id not in accepted_friend_ids
+        if candidate_id != user_id and candidate_id not in excluded_user_ids
     ]
     ranked_candidates = rank_candidates(
         user_profile,

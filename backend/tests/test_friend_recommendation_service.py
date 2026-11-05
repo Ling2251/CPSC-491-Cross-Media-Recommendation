@@ -15,16 +15,43 @@ class FakeResult:
 
 
 class FakeLoadConnection:
-    def __init__(self, user_ids=None, interactions=None, friend_ids=None):
+    def __init__(
+        self,
+        user_ids=None,
+        interactions=None,
+        friend_ids=None,
+        friendships=None,
+    ):
         self.user_ids = user_ids
         self.interactions = interactions
         self.friend_ids = friend_ids or []
+        self.friendships = friendships
         self.queries = []
         self.closed = False
 
     def execute(self, query, params=None):
         self.queries.append(query)
         if "FROM friendships" in query:
+            if self.friendships is not None:
+                user_id = params[0]
+                return FakeResult(
+                    [
+                        (
+                            receiver_id
+                            if requester_id == user_id
+                            else requester_id,
+                        )
+                        for requester_id, receiver_id, status in self.friendships
+                        if (
+                            status == "accepted"
+                            and user_id in (requester_id, receiver_id)
+                        )
+                        or (
+                            status == "pending"
+                            and requester_id == user_id
+                        )
+                    ]
+                )
             return FakeResult([(user_id,) for user_id in self.friend_ids])
         if "SELECT id" in query:
             return FakeResult([(user_id,) for user_id in self.user_ids])
@@ -98,7 +125,9 @@ def test_recalculate_excludes_accepted_friends_without_changing_friendships():
             (9, 3, "video", "consumed", None, ["cooking"]),
         ],
     )
-    friendship_connection = FakeLoadConnection(friend_ids=[8])
+    friendship_connection = FakeLoadConnection(
+        friendships=[(7, 8, "accepted")]
+    )
     save_connection = FakeSaveConnection()
     connections = iter(
         [load_connection, friendship_connection, save_connection]
@@ -119,6 +148,40 @@ def test_recalculate_excludes_accepted_friends_without_changing_friendships():
     assert len(friendship_connection.queries) == 1
     assert "status = 'accepted'" in friendship_connection.queries[0]
     assert friendship_connection.queries[0].lstrip().upper().startswith("SELECT")
+
+
+def test_recalculate_excludes_pending_outgoing_request_recipients():
+    load_connection = FakeLoadConnection(
+        [7, 8, 9, 10],
+        [
+            (7, 1, "video", "consumed", None, ["sci-fi"]),
+            (8, 2, "video", "consumed", None, ["sci-fi"]),
+            (9, 3, "video", "consumed", None, ["cooking"]),
+        ],
+    )
+    friendship_connection = FakeLoadConnection(
+        friendships=[
+            (7, 8, "pending"),
+            (9, 7, "pending"),
+            (7, 10, "declined"),
+        ]
+    )
+    save_connection = FakeSaveConnection()
+    connections = iter(
+        [load_connection, friendship_connection, save_connection]
+    )
+
+    ranked = recalculate_friend_recommendations(
+        7,
+        connection_factory=lambda: next(connections),
+    )
+
+    assert [candidate["user_id"] for candidate in ranked] == [9, 10]
+    assert "status = 'pending'" in friendship_connection.queries[0]
+    assert "requester_id = %s" in friendship_connection.queries[0]
+    assert friendship_connection.queries[0].lstrip().upper().startswith("SELECT")
+    assert friendship_connection.queries[0].count("%s") == 4
+    assert len(friendship_connection.queries) == 1
 
 
 def test_recalculate_updates_scores_after_preferences_change():

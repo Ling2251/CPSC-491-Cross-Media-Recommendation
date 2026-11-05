@@ -182,11 +182,11 @@ def load_active_user_preference_profiles(
         connection.close()
 
 
-def load_accepted_friend_ids(
+def load_recommendation_excluded_ids(
     user_id: int,
     connection_factory: Optional[Callable[[], Any]] = None,
 ) -> set[int]:
-    """Return user IDs connected by an accepted friendship to ``user_id``."""
+    """Return accepted friends and recipients of the user's pending requests."""
     if isinstance(user_id, bool) or not isinstance(user_id, int) or user_id < 1:
         raise ValueError("user_id must be a positive integer")
 
@@ -200,11 +200,16 @@ def load_accepted_friend_ids(
                 ELSE requester_id
             END AS friend_id
             FROM friendships
-            WHERE status = 'accepted'
-              AND (requester_id = %s OR receiver_id = %s)
+            WHERE (
+                status = 'accepted'
+                AND (requester_id = %s OR receiver_id = %s)
+            ) OR (
+                status = 'pending'
+                AND requester_id = %s
+            )
             ORDER BY friend_id
             """,
-            (user_id, user_id, user_id),
+            (user_id, user_id, user_id, user_id),
         ).fetchall()
         return {row[0] for row in rows}
     finally:
