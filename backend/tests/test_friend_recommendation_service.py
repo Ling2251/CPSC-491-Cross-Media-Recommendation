@@ -150,6 +150,79 @@ def test_recalculate_excludes_accepted_friends_without_changing_friendships():
     assert friendship_connection.queries[0].lstrip().upper().startswith("SELECT")
 
 
+def test_recalculate_excludes_multiple_accepted_friends():
+    load_connection = FakeLoadConnection(
+        [7, 8, 9, 10],
+        [
+            (7, 1, "video", "consumed", None, ["sci-fi"]),
+            (8, 2, "video", "consumed", None, ["sci-fi"]),
+            (9, 3, "video", "consumed", None, ["sci-fi"]),
+            (10, 4, "video", "consumed", None, ["cooking"]),
+        ],
+    )
+    friendship_connection = FakeLoadConnection(
+        friendships=[
+            (7, 8, "accepted"),
+            (9, 7, "accepted"),
+        ]
+    )
+    save_connection = FakeSaveConnection()
+    connections = iter(
+        [load_connection, friendship_connection, save_connection]
+    )
+
+    ranked = recalculate_friend_recommendations(
+        7,
+        connection_factory=lambda: next(connections),
+    )
+
+    assert [candidate["user_id"] for candidate in ranked] == [10]
+    assert ranked[0]["similarity_score"] == pytest.approx(0.0)
+
+
+def test_filtering_does_not_change_scores_for_remaining_candidates():
+    interactions = [
+        (7, 1, "video", "consumed", None, ["sci-fi"]),
+        (8, 2, "video", "consumed", None, ["sci-fi"]),
+        (9, 3, "video", "consumed", None, ["rock"]),
+        (10, 4, "video", "consumed", None, ["sci-fi"]),
+        (11, 5, "video", "consumed", None, ["cooking"]),
+    ]
+
+    def run_recommendations(friendships):
+        load_connection = FakeLoadConnection(
+            [7, 8, 9, 10, 11],
+            interactions,
+        )
+        friendship_connection = FakeLoadConnection(friendships=friendships)
+        save_connection = FakeSaveConnection()
+        connections = iter(
+            [load_connection, friendship_connection, save_connection]
+        )
+        ranked = recalculate_friend_recommendations(
+            7,
+            connection_factory=lambda: next(connections),
+        )
+        return {
+            candidate["user_id"]: candidate["similarity_score"]
+            for candidate in ranked
+        }
+
+    unfiltered_scores = run_recommendations([])
+    filtered_scores = run_recommendations(
+        [
+            (7, 8, "accepted"),
+            (9, 7, "accepted"),
+        ]
+    )
+
+    assert set(filtered_scores) == {10, 11}
+    assert filtered_scores == {
+        candidate_id: unfiltered_scores[candidate_id]
+        for candidate_id in (10, 11)
+    }
+
+
 def test_recalculate_excludes_pending_outgoing_request_recipients():
     load_connection = FakeLoadConnection(
         [7, 8, 9, 10],
