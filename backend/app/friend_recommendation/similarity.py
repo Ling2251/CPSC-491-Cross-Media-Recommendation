@@ -375,7 +375,7 @@ def _shared_tags(
             for tag in vector_a.keys() & vector_b.keys()
             if vector_a[tag] > 0 and vector_b[tag] > 0
         )
-    return sorted(shared_tags)
+    return sorted(shared_tags)[:4]
 
 
 def rank_candidates(

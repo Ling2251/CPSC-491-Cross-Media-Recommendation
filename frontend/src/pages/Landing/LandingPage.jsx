@@ -76,6 +76,7 @@ export default function LandingPage() {
           <a href="/">Home</a>
           <a href="/discover">Discover</a>
           <a href="/friends">Friends</a>
+          <a href="/suggestions">Friend Suggestions</a>
           <a href="/forums">Forums</a>
           <a href="/profile">Profile</a>
         </nav>
@@ -85,7 +86,7 @@ export default function LandingPage() {
         {/* LEFT SIDE */}
         <section className="auth-intro">
           <div className="auth-intro-content">
-            <h1>[ App Name ]</h1>
+            <h1>[ Cross Media Recommendations ]</h1>
 
             <p className="auth-description">
               Discover new media based on what you

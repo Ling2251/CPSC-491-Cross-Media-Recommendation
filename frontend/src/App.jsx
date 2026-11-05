@@ -40,7 +40,10 @@ function App() {
       <Route path="/login" element={accountPage} />
       <Route path="/friends" element={<FriendsPage />} />
       <Route path="/manage-friends" element={<FriendsPage />} />
-      <Route path="/suggestions" element={<FriendSuggestionsPage />} />
+      <Route
+        path="/suggestions"
+        element={<FriendSuggestionsPage userId={user?.id} />}
+      />
       <Route path="/signup" element={<Signup />} />
       <Route path="*" element={accountPage} />
     </Routes>
