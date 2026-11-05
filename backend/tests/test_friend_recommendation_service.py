@@ -289,6 +289,43 @@ def test_recalculate_excludes_pending_incoming_request_senders():
     assert "receiver_id = %s" in friendship_connection.queries[0]
 
 
+def test_recalculate_excludes_multiple_pending_requests_in_both_directions():
+    load_connection = FakeLoadConnection(
+        [7, 8, 9, 10, 11, 12],
+        [
+            (7, 1, "video", "consumed", None, ["sci-fi"]),
+            (8, 2, "video", "consumed", None, ["sci-fi"]),
+            (9, 3, "video", "consumed", None, ["rock"]),
+            (10, 4, "video", "consumed", None, ["fantasy"]),
+            (11, 5, "video", "consumed", None, ["cooking"]),
+        ],
+    )
+    friendship_connection = FakeLoadConnection(
+        friendships=[
+            (7, 8, "pending"),
+            (7, 9, "pending"),
+            (10, 7, "pending"),
+            (11, 7, "pending"),
+            (7, 12, "declined"),
+        ]
+    )
+    save_connection = FakeSaveConnection()
+    connections = iter(
+        [load_connection, friendship_connection, save_connection]
+    )
+
+    ranked = recalculate_friend_recommendations(
+        7,
+        connection_factory=lambda: next(connections),
+    )
+
+    assert {candidate["user_id"] for candidate in ranked} == {12}
+    assert all(
+        candidate["user_id"] not in {8, 9, 10, 11}
+        for candidate in ranked
+    )
+
+
 def test_recalculate_updates_scores_after_preferences_change():
     initial_load = FakeLoadConnection(
         [7, 8],
