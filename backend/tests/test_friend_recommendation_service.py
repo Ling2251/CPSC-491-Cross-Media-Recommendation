@@ -48,7 +48,7 @@ class FakeLoadConnection:
                         )
                         or (
                             status == "pending"
-                            and requester_id == user_id
+                            and user_id in (requester_id, receiver_id)
                         )
                     ]
                 )
@@ -162,7 +162,6 @@ def test_recalculate_excludes_pending_outgoing_request_recipients():
     friendship_connection = FakeLoadConnection(
         friendships=[
             (7, 8, "pending"),
-            (9, 7, "pending"),
             (7, 10, "declined"),
         ]
     )
@@ -179,9 +178,42 @@ def test_recalculate_excludes_pending_outgoing_request_recipients():
     assert [candidate["user_id"] for candidate in ranked] == [9, 10]
     assert "status = 'pending'" in friendship_connection.queries[0]
     assert "requester_id = %s" in friendship_connection.queries[0]
+    assert "receiver_id = %s" in friendship_connection.queries[0]
     assert friendship_connection.queries[0].lstrip().upper().startswith("SELECT")
-    assert friendship_connection.queries[0].count("%s") == 4
+    assert friendship_connection.queries[0].count("%s") == 5
     assert len(friendship_connection.queries) == 1
+
+
+def test_recalculate_excludes_pending_incoming_request_senders():
+    load_connection = FakeLoadConnection(
+        [7, 8, 9, 10],
+        [
+            (7, 1, "video", "consumed", None, ["sci-fi"]),
+            (8, 2, "video", "consumed", None, ["sci-fi"]),
+            (9, 3, "video", "consumed", None, ["cooking"]),
+        ],
+    )
+    friendship_connection = FakeLoadConnection(
+        friendships=[
+            (8, 7, "pending"),
+            (9, 10, "pending"),
+            (7, 10, "declined"),
+        ]
+    )
+    save_connection = FakeSaveConnection()
+    connections = iter(
+        [load_connection, friendship_connection, save_connection]
+    )
+
+    ranked = recalculate_friend_recommendations(
+        7,
+        connection_factory=lambda: next(connections),
+    )
+
+    assert [candidate["user_id"] for candidate in ranked] == [9, 10]
+    assert "status = 'pending'" in friendship_connection.queries[0]
+    assert "requester_id = %s" in friendship_connection.queries[0]
+    assert "receiver_id = %s" in friendship_connection.queries[0]
 
 
 def test_recalculate_updates_scores_after_preferences_change():

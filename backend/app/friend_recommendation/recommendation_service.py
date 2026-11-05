@@ -81,8 +81,8 @@ def recalculate_friend_recommendations(
     """Rank all other active users for ``user_id`` and persist their scores.
 
     Profiles are built from each active user's media interactions and approved
-    tags. Existing accepted friends, recipients of the user's pending outgoing
-    requests, and the requesting user are excluded; the remaining ranking is
+    tags. Existing accepted friends, users with pending requests in either
+    direction, and the requesting user are excluded; the remaining ranking is
     persisted and returned.
     """
     if isinstance(user_id, bool) or not isinstance(user_id, int) or user_id < 1:
