@@ -182,6 +182,26 @@ def load_active_user_preference_profiles(
         connection.close()
 
 
+def load_active_user_names(
+    connection_factory: Optional[Callable[[], Any]] = None,
+) -> Dict[int, str]:
+    """Return names for active users keyed by their numeric IDs."""
+    connect = connection_factory or connect_database
+    connection = connect()
+    try:
+        rows = connection.execute(
+            """
+            SELECT id, name
+            FROM users
+            WHERE account_state = 'active'
+            ORDER BY id
+            """
+        ).fetchall()
+        return {row[0]: row[1] for row in rows}
+    finally:
+        connection.close()
+
+
 def build_user_preference_profile(
     user_id: int,
     connection_factory: Optional[Callable[[], Any]] = None,

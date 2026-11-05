@@ -1,6 +1,7 @@
 import pytest
 
 from app.friend_recommendation import recommendation_service
+from app.friend_recommendation.database_service import UserNotFoundError
 from app.friend_recommendation.similarity import rank_candidates
 from app.friend_recommendation.similarity_test_data import (
     USER_A,
@@ -43,6 +44,48 @@ def test_service_returns_controlled_candidates_ranked_by_similarity_descending(
     ]
     assert ranked[1]["similarity_score"] > ranked[2]["similarity_score"]
     assert ranked[2]["similarity_score"] == pytest.approx(0.0)
+
+
+def test_get_recommendations_accepts_account_name_and_returns_ranked_pairs(
+    monkeypatch,
+):
+    monkeypatch.setattr(
+        recommendation_service,
+        "load_active_user_names",
+        lambda connection_factory: {1: "user_a", 2: "user_b", 3: "user_c"},
+    )
+    recalculated_user_ids = []
+
+    def fake_recalculate(user_id, connection_factory=None):
+        recalculated_user_ids.append(user_id)
+        return [
+            {"user_id": 2, "similarity_score": 1.0},
+            {"user_id": 3, "similarity_score": 0.0},
+        ]
+
+    monkeypatch.setattr(
+        recommendation_service,
+        "recalculate_friend_recommendations",
+        fake_recalculate,
+    )
+
+    recommendations = recommendation_service.get_recommendations(
+        user_id="user_a"
+    )
+
+    assert recalculated_user_ids == [1]
+    assert recommendations == [("user_b", 1.0), ("user_c", 0.0)]
+
+
+def test_get_recommendations_rejects_unknown_account_name(monkeypatch):
+    monkeypatch.setattr(
+        recommendation_service,
+        "load_active_user_names",
+        lambda connection_factory: {1: "user_a"},
+    )
+
+    with pytest.raises(UserNotFoundError, match="user_b"):
+        recommendation_service.get_recommendations(user_id="user_b")
 
 
 def test_equal_scores_are_broken_by_user_id_independent_of_input_order():
