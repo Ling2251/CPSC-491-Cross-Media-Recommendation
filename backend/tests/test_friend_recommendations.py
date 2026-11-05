@@ -205,6 +205,64 @@ def test_current_user_is_excluded_and_limit_applies_after_ranking():
     )
 
     assert [candidate["user_id"] for candidate in ranked] == [2]
+    assert all(
+        candidate["user_id"] != USER_A["user_id"]
+        for candidate in ranked
+    )
+
+
+def test_duplicate_candidate_records_are_rejected_without_duplicate_results():
+    duplicate_candidates = [
+        {
+            "user_id": 20,
+            "username": "candidate",
+            "preferences": USER_B["preferences"],
+        },
+        {
+            "user_id": 20,
+            "username": "duplicate",
+            "preferences": USER_C["preferences"],
+        },
+    ]
+
+    with pytest.raises(ValueError, match="Duplicate candidate user_id: 20"):
+        rank_candidates(USER_A["preferences"], duplicate_candidates)
+
+
+def test_recommendation_result_is_empty_when_all_candidates_are_filtered(
+    monkeypatch,
+):
+    profiles = {
+        USER_A["user_id"]: USER_A["preferences"],
+        USER_B["user_id"]: USER_B["preferences"],
+        USER_C["user_id"]: USER_C["preferences"],
+    }
+    saved_candidates = []
+    monkeypatch.setattr(
+        recommendation_service,
+        "load_active_user_preference_profiles",
+        lambda connection_factory: profiles,
+    )
+    monkeypatch.setattr(
+        recommendation_service,
+        "load_recommendation_excluded_ids",
+        lambda user_id, connection_factory=None: set(),
+    )
+    monkeypatch.setattr(
+        recommendation_service,
+        "save_similarity_scores",
+        lambda user_id, candidates, **kwargs: saved_candidates.extend(
+            candidates
+        ),
+    )
+
+    recommendations = recommendation_service.recalculate_friend_recommendations(
+        USER_A["user_id"],
+        opted_out_user_ids=[USER_B["user_id"], USER_C["user_id"]],
+    )
+
+    assert recommendations == []
+    assert saved_candidates == []
 
 
 def test_ranking_preserves_candidate_metadata_without_preference_vectors():
