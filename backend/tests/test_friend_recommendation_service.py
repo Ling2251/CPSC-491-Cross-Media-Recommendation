@@ -223,6 +223,82 @@ def test_filtering_does_not_change_scores_for_remaining_candidates():
     }
 
 
+def test_recalculate_excludes_supplied_opt_out_users_without_changing_scores():
+    interactions = [
+        (7, 1, "video", "consumed", None, ["sci-fi"]),
+        (8, 2, "video", "consumed", None, ["sci-fi"]),
+        (9, 3, "video", "consumed", None, ["rock"]),
+        (10, 4, "video", "consumed", None, ["fantasy"]),
+        (11, 5, "video", "consumed", None, ["cooking"]),
+    ]
+
+    def run_recommendations(opted_out_user_ids):
+        load_connection = FakeLoadConnection(
+            [7, 8, 9, 10, 11],
+            interactions,
+        )
+        friendship_connection = FakeLoadConnection(friend_ids=[])
+        save_connection = FakeSaveConnection()
+        connections = iter(
+            [load_connection, friendship_connection, save_connection]
+        )
+        ranked = recalculate_friend_recommendations(
+            7,
+            connection_factory=lambda: next(connections),
+            opted_out_user_ids=opted_out_user_ids,
+        )
+        return {
+            candidate["user_id"]: candidate["similarity_score"]
+            for candidate in ranked
+        }
+
+    eligible_scores = run_recommendations([])
+    filtered_scores = run_recommendations([8, 9])
+
+    assert set(filtered_scores) == {10, 11}
+    assert filtered_scores == {
+        candidate_id: eligible_scores[candidate_id]
+        for candidate_id in (10, 11)
+    }
+
+
+@pytest.mark.parametrize("opted_out_user_ids", [None, []])
+def test_recalculate_handles_empty_opt_out_set_without_filtering_candidates(
+    opted_out_user_ids,
+):
+    load_connection = FakeLoadConnection(
+        [7, 8, 9],
+        [
+            (7, 1, "video", "consumed", None, ["sci-fi"]),
+            (8, 2, "video", "consumed", None, ["rock"]),
+        ],
+    )
+    friendship_connection = FakeLoadConnection(friend_ids=[])
+    save_connection = FakeSaveConnection()
+    connections = iter(
+        [load_connection, friendship_connection, save_connection]
+    )
+
+    ranked = recalculate_friend_recommendations(
+        7,
+        connection_factory=lambda: next(connections),
+        opted_out_user_ids=opted_out_user_ids,
+    )
+
+    assert [candidate["user_id"] for candidate in ranked] == [8, 9]
+
+
+@pytest.mark.parametrize("opted_out_user_ids", [[0], [-1], [True], ["8"]])
+def test_recalculate_rejects_invalid_opt_out_user_ids(
+    opted_out_user_ids,
+):
+    with pytest.raises(ValueError, match="opted_out_user_ids"):
+        recalculate_friend_recommendations(
+            7,
+            opted_out_user_ids=opted_out_user_ids,
+        )
+
+
 def test_recalculate_excludes_pending_outgoing_request_recipients():
     load_connection = FakeLoadConnection(
         [7, 8, 9, 10],

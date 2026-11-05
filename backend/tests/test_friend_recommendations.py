@@ -60,9 +60,15 @@ def test_get_recommendations_accepts_account_name_and_returns_ranked_pairs(
         lambda connection_factory: {1: "user_a", 2: "user_b", 3: "user_c"},
     )
     recalculated_user_ids = []
+    supplied_opt_out_ids = []
 
-    def fake_recalculate(user_id, connection_factory=None):
+    def fake_recalculate(
+        user_id,
+        connection_factory=None,
+        opted_out_user_ids=None,
+    ):
         recalculated_user_ids.append(user_id)
+        supplied_opt_out_ids.extend(opted_out_user_ids or [])
         return [
             {"user_id": 2, "similarity_score": 1.0},
             {"user_id": 3, "similarity_score": 0.0},
@@ -75,10 +81,12 @@ def test_get_recommendations_accepts_account_name_and_returns_ranked_pairs(
     )
 
     recommendations = recommendation_service.get_recommendations(
-        user_id="user_a"
+        user_id="user_a",
+        opted_out_user_ids=[42],
     )
 
     assert recalculated_user_ids == [1]
+    assert supplied_opt_out_ids == [42]
     assert recommendations == [("user_b", 1.0), ("user_c", 0.0)]
 
 
