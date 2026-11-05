@@ -26,6 +26,11 @@ def test_service_returns_controlled_candidates_ranked_by_similarity_descending(
     )
     monkeypatch.setattr(
         recommendation_service,
+        "load_accepted_friend_ids",
+        lambda user_id, connection_factory=None: set(),
+    )
+    monkeypatch.setattr(
+        recommendation_service,
         "save_similarity_scores",
         lambda *args, **kwargs: None,
     )

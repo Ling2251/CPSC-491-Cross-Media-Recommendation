@@ -2,6 +2,7 @@ from .models import MediaInteraction
 from .database_service import (
     UserNotFoundError,
     load_active_user_preference_profiles,
+    load_accepted_friend_ids,
     load_active_user_names,
     build_user_preference_profile,
     load_user_interactions,
@@ -28,6 +29,7 @@ __all__ = [
     "MediaInteraction",
     "UserNotFoundError",
     "load_active_user_preference_profiles",
+    "load_accepted_friend_ids",
     "load_active_user_names",
     "build_user_preference_profile",
     "get_recommendations",

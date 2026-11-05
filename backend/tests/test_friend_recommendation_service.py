@@ -15,14 +15,17 @@ class FakeResult:
 
 
 class FakeLoadConnection:
-    def __init__(self, user_ids, interactions):
+    def __init__(self, user_ids=None, interactions=None, friend_ids=None):
         self.user_ids = user_ids
         self.interactions = interactions
+        self.friend_ids = friend_ids or []
         self.queries = []
         self.closed = False
 
     def execute(self, query, params=None):
         self.queries.append(query)
+        if "FROM friendships" in query:
+            return FakeResult([(user_id,) for user_id in self.friend_ids])
         if "SELECT id" in query:
             return FakeResult([(user_id,) for user_id in self.user_ids])
         return FakeResult(self.interactions)
@@ -59,8 +62,11 @@ def test_recalculate_loads_profiles_ranks_and_persists_scores():
             (9, 3, "video", "consumed", None, ["cooking"]),
         ],
     )
+    friendship_connection = FakeLoadConnection(friend_ids=[])
     save_connection = FakeSaveConnection()
-    connections = iter([load_connection, save_connection])
+    connections = iter(
+        [load_connection, friendship_connection, save_connection]
+    )
 
     ranked = recalculate_friend_recommendations(
         7,
@@ -74,8 +80,45 @@ def test_recalculate_loads_profiles_ranks_and_persists_scores():
     assert "DELETE FROM friend_similarity_scores" in save_connection.executions[0][0]
     assert save_connection.executions[1][1] == (7, 8, 1.0, 1.0, 0.0, 0.0)
     assert load_connection.closed
+    assert friendship_connection.closed
+    assert all(
+        query.lstrip().upper().startswith("SELECT")
+        for query in friendship_connection.queries
+    )
     assert save_connection.committed
     assert save_connection.closed
+
+
+def test_recalculate_excludes_accepted_friends_without_changing_friendships():
+    load_connection = FakeLoadConnection(
+        [7, 8, 9, 10],
+        [
+            (7, 1, "video", "consumed", None, ["sci-fi"]),
+            (8, 2, "video", "consumed", None, ["sci-fi"]),
+            (9, 3, "video", "consumed", None, ["cooking"]),
+        ],
+    )
+    friendship_connection = FakeLoadConnection(friend_ids=[8])
+    save_connection = FakeSaveConnection()
+    connections = iter(
+        [load_connection, friendship_connection, save_connection]
+    )
+
+    ranked = recalculate_friend_recommendations(
+        7,
+        connection_factory=lambda: next(connections),
+    )
+
+    assert [candidate["user_id"] for candidate in ranked] == [9, 10]
+    saved_candidate_ids = [
+        params[1]
+        for query, params in save_connection.executions
+        if len(params) == 6
+    ]
+    assert saved_candidate_ids == [9, 10]
+    assert len(friendship_connection.queries) == 1
+    assert "status = 'accepted'" in friendship_connection.queries[0]
+    assert friendship_connection.queries[0].lstrip().upper().startswith("SELECT")
 
 
 def test_recalculate_updates_scores_after_preferences_change():
@@ -94,9 +137,18 @@ def test_recalculate_updates_scores_after_preferences_change():
             (8, 2, "video", "consumed", None, ["cooking"]),
         ],
     )
+    initial_friendships = FakeLoadConnection(friend_ids=[])
+    updated_friendships = FakeLoadConnection(friend_ids=[])
     updated_save = FakeSaveConnection()
     connections = iter(
-        [initial_load, initial_save, updated_load, updated_save]
+        [
+            initial_load,
+            initial_friendships,
+            initial_save,
+            updated_load,
+            updated_friendships,
+            updated_save,
+        ]
     )
     connection_factory = lambda: next(connections)
 
