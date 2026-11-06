@@ -102,8 +102,8 @@ it(
       const pairCount = await pool.query(
         `SELECT count(*)::int AS count
          FROM friendships
-         WHERE LEAST(requester_id, receiver_id) = LEAST($1, $2)
-           AND GREATEST(requester_id, receiver_id) = GREATEST($1, $2)`,
+         WHERE (requester_id = $1 AND receiver_id = $2)
+            OR (requester_id = $2 AND receiver_id = $1)`,
         [senderId, recipientId]
       );
 
