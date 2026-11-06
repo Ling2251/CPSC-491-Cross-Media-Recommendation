@@ -148,6 +148,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -177,6 +182,9 @@ jobs:
                   connection.execute(migration.read_text(encoding="utf-8"))
           PY
 
+      - name: Install backend JavaScript dependencies
+        run: npm ci --prefix backend
+
       - name: Run Friend Recommendation Python tests
         working-directory: backend
         run: >-
@@ -185,6 +193,14 @@ jobs:
           tests/test_similarity.py
           tests/test_similarity_test_data.py
           -v --tb=short
+
+      - name: Run friendship request boundary tests
+        working-directory: backend
+        run: >-
+          node --test
+          tests/friendshipRoutes.test.js
+          tests/friendshipService.test.js
+          tests/friendshipDatabase.test.js
 
       - name: Run AI backend Python tests
         working-directory: backend/ai-backend

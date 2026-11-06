@@ -98,6 +98,13 @@ function formatFriendship(row) {
 }
 
 function handleError(res, error) {
+  if (error.code === "INVALID_ID") {
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+
   // Handle known database constraint violations.
   if (error.code === "23503") {
     return res.status(404).json({
