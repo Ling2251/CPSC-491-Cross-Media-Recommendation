@@ -182,6 +182,60 @@ def load_active_user_preference_profiles(
         connection.close()
 
 
+def load_recommendation_excluded_ids(
+    user_id: int,
+    connection_factory: Optional[Callable[[], Any]] = None,
+) -> set[int]:
+    """Return friends and users with a pending request in either direction."""
+    if isinstance(user_id, bool) or not isinstance(user_id, int) or user_id < 1:
+        raise ValueError("user_id must be a positive integer")
+
+    connect = connection_factory or connect_database
+    connection = connect()
+    try:
+        rows = connection.execute(
+            """
+            SELECT CASE
+                WHEN requester_id = %s THEN receiver_id
+                ELSE requester_id
+            END AS friend_id
+            FROM friendships
+            WHERE (
+                status = 'accepted'
+                AND (requester_id = %s OR receiver_id = %s)
+            ) OR (
+                status = 'pending'
+                AND (requester_id = %s OR receiver_id = %s)
+            )
+            ORDER BY friend_id
+            """,
+            (user_id, user_id, user_id, user_id, user_id),
+        ).fetchall()
+        return {row[0] for row in rows}
+    finally:
+        connection.close()
+
+
+def load_active_user_names(
+    connection_factory: Optional[Callable[[], Any]] = None,
+) -> Dict[int, str]:
+    """Return names for active users keyed by their numeric IDs."""
+    connect = connection_factory or connect_database
+    connection = connect()
+    try:
+        rows = connection.execute(
+            """
+            SELECT id, name
+            FROM users
+            WHERE account_state = 'active'
+            ORDER BY id
+            """
+        ).fetchall()
+        return {row[0]: row[1] for row in rows}
+    finally:
+        connection.close()
+
+
 def build_user_preference_profile(
     user_id: int,
     connection_factory: Optional[Callable[[], Any]] = None,

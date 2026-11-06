@@ -94,6 +94,11 @@ The Python `rank_candidates` function scores and orders candidate profiles;
 `get_ranked_similarity_scores` retrieves stored results by descending overall
 score.
 
+Migration `0006_require_rated_interaction_rating.sql` tightens the interaction
+rating constraint so a `rated` interaction must have a non-NULL rating from 1
+through 5. Apply it through the migration runner to databases that already
+applied migration 0004.
+
 `recalculate_friend_recommendations(user_id)` is the database-backed workflow:
 it builds profiles for all active users from their interactions and approved
 tags, ranks every other active user for the requested user, persists the full

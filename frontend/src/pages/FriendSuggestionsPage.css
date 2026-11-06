@@ -44,6 +44,19 @@
   color: #f59b74;
 }
 
+.suggestions-error {
+  margin: -20px 0 24px;
+  color: #ff8c8c;
+}
+
+.fr-avatar-fallback {
+  display: grid;
+  place-items: center;
+  color: #ffffff;
+  font-size: 24px;
+  font-weight: 700;
+}
+
 .suggestions-page .fr-score-bar {
   height: 8px;
   overflow: hidden;

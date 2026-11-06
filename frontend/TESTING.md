@@ -27,6 +27,14 @@ server and browser:
 The browser check uses temporary mock recommendation data. It does not validate
 live recommendation results or a production database connection.
 
+## Sprint 3 controlled ranking check
+
+Manually ran the controlled profiles from
+`backend/app/friend_recommendation/similarity_test_data.py` through
+`rank_candidates` on 2026-10-29, using User A as the source and Users B, C, and D
+as candidates. Expected order was B, D, C; observed order was user_b (1.000),
+user_d (0.267), user_c (0.000). The observed order matched the plan.
+
 ## PostgreSQL score-storage integration
 
 The real-database score storage test is
@@ -36,3 +44,19 @@ It runs in `.github/workflows/database-ci.yml` after the migrations are applied.
 To run it locally, apply the database migrations, configure the standard
 `PG*` connection variables, set `FRIEND_RECOMMENDATION_TEST_DATABASE=1`, and run
 the test from `backend/`.
+
+## Friend Recommendation CI test roadmap
+
+| Sprint | Planned coverage | Current status |
+| --- | --- | --- |
+| 2 | Preference weighting, repeated-tag aggregation, media normalization, and missing or invalid input. | Implemented in `backend/tests/test_friend_preferences.py`; run by the Python job in `.github/workflows/friends-ci.yml`. |
+| 3 | Similarity edge cases, ranking, shared interests, score persistence, retrieval, updates, and database constraints. | Implemented across `backend/tests/test_similarity.py`, `backend/tests/test_friend_similarity.py`, and score-storage tests. The friends and database workflows run the Python checks; PostgreSQL integration passed locally against a disposable migrated database. |
+| 4 | Friendship and friend-request API behavior, candidate eligibility, and privacy filtering. | Route and service test files exist, but `.github/workflows/friends-ci.yml` currently checks only JavaScript syntax; it does not run those Node tests. Add automated filtering and privacy cases as those rules are implemented. |
+| 5 | Recommendation API behavior and frontend/backend integration, including recommendation filters and friend-request state. | Planned; add API and integration tests when the recommendation endpoint and connected UI are implemented. |
+| 6 | Full regression suite, end-to-end recommendation workflow, manual Friend Suggestions checks, and basic performance results. | Planned; consolidate stable earlier-sprint tests and record end-to-end and performance evidence. |
+
+The main Friend Recommendation workflow is
+`.github/workflows/friends-ci.yml`; database constraint and score-storage checks
+also run in `.github/workflows/database-ci.yml`. Frontend tests, lint, and build
+run in `.github/workflows/frontend-ci.yml` and the friends workflow. Update this
+roadmap as later-sprint tests become executable in CI.

@@ -109,6 +109,28 @@ async function main() {
     );
 
     await expectConstraintViolation(
+        client,
+        'rated interaction with a rating below 1 is rejected',
+        () =>
+          client.query(
+            `INSERT INTO user_media_interactions (user_id, media_id, interaction_type, rating)
+             VALUES ($1, $2, 'rated', 0)`,
+            [user1.id, media.id],
+          ),
+    );
+
+    await expectConstraintViolation(
+        client,
+        'rated interaction with a rating above 5 is rejected',
+        () =>
+          client.query(
+            `INSERT INTO user_media_interactions (user_id, media_id, interaction_type, rating)
+             VALUES ($1, $2, 'rated', 6)`,
+            [user1.id, media.id],
+          ),
+    );
+
+    await expectConstraintViolation(
       client,
       'rating on a non-rated interaction is rejected',
       () =>
