@@ -2,3 +2,8 @@ pytest
 pytest-cov
 requests
 psycopg[binary]
+fastapi==0.104.1
+uvicorn==0.24.0
+python-dotenv==1.0.0
+PyJWT==2.10.1
+httpx==0.25.2
