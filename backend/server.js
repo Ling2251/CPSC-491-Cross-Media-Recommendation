@@ -10,6 +10,10 @@ const app = express()
 const PORT = 3001
 const JWT_SECRET = process.env.JWT_SECRET
 
+if (!JWT_SECRET || JWT_SECRET.trim().length === 0) {
+  throw new Error("JWT_SECRET must be configured");
+}
+
 app.use(cors())
 app.use(express.json())
 
