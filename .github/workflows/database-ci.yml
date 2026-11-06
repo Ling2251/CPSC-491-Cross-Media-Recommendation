@@ -81,6 +81,14 @@ jobs:
       - name: Run TMDb fetch/retry tests
         working-directory: database/scripts
         run: npm run test:fetch
+          
+      - name: Run Open Library adapter tests
+        working-directory: database/scripts
+        run: npm run test:openlibrary
+
+      - name: Run book import/tagging integration tests
+        working-directory: database/scripts
+        run: npm run test:book-integration
 
       - name: Record build version
         run: |
