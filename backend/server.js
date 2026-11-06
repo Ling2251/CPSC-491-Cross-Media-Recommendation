@@ -40,23 +40,6 @@ function authenticateToken(req, res, next) {
   }
 }
 
-/* db debugger
-app.get("/api/debug/database", async (req, res) => {
-  try {
-    const result = await pool.query(
-      "SELECT current_database() AS database, current_user AS username"
-    );
-
-    res.json(result.rows[0]);
-  } catch (error) {
-    console.error("Database connection error:", error.message);
-
-    res.status(500).json({
-      message: "Database connection failed"
-    });
-  }
-}); */
-
 //test if backend is connected to frontend
 app.get("/api/test", (req, res) => {
   res.json({
@@ -81,23 +64,6 @@ app.get("/api/test", (req, res) => {
     })
   }
 }) */
-
-//Tests database readings
-app.get("/api/users", async (req, res) => {
-  try {
-    const result = await pool.query(
-      "SELECT id, name, email, account_state, created_at FROM users"
-    )
-
-    res.json(result.rows)
-  } catch (error) {
-    console.error(error)
-
-    res.status(500).json({
-      message: "Could not retrieve users"
-    })
-  }
-})
 
 app.post("/api/auth/signup", async (req, res) => {
   try {
@@ -279,6 +245,148 @@ async function activateUser(userId) {
     throw error;
   }
 }
+
+ // Sprint 4: Secure friendship accept/decline operations
+ async function changeFriendRequestStatus(req, res, newStatus) {
+   const requestId = Number(req.params.requestId);
+   const authenticatedUserId = Number(req.user.userId);
+
+   if (!Number.isSafeInteger(requestId) || requestId <= 0) {
+     return res.status(400).json({
+       message: "Invalid friend request ID"
+     });
+   }
+
+   try {
+     // Retrieve the request from PostgreSQL
+     const result = await pool.query(
+       `SELECT id, requester_id, receiver_id, status
+        FROM friendships
+        WHERE id = $1`,
+       [requestId]
+     );
+
+     if (result.rows.length === 0) {
+       return res.status(404).json({
+         message: "Friend request not found"
+       });
+     }
+
+     const request = result.rows[0];
+
+     // Only the intended receiver may accept or decline
+     if (Number(request.receiver_id) !== authenticatedUserId) {
+       return res.status(403).json({
+         message: "Not authorized to modify this request"
+       });
+     }
+
+     if (request.status !== "pending") {
+       return res.status(409).json({
+         message: "Friend request is no longer pending"
+       });
+     }
+
+     // The WHERE conditions also protect against concurrent updates
+     const updated = await pool.query(
+       `UPDATE friendships
+        SET status = $1
+        WHERE id = $2
+          AND receiver_id = $3
+          AND status = 'pending'
+        RETURNING id, requester_id, receiver_id, status`,
+       [newStatus, requestId, authenticatedUserId]
+     );
+
+     if (updated.rows.length === 0) {
+       return res.status(409).json({
+         message: "Friend request was already changed"
+       });
+     }
+
+     return res.status(200).json({
+       message: `Friend request ${newStatus}`,
+       friendship: updated.rows[0]
+     });
+
+   } catch (error) {
+     console.error("Friendship update error:", error.message);
+
+     return res.status(500).json({
+       message: "Could not update friend request"
+     });
+   }
+ }
+
+ app.post(
+   "/api/friendships/:requestId/accept",
+   authenticateToken,
+   (req, res) => changeFriendRequestStatus(req, res, "accepted")
+ );
+
+ app.post(
+   "/api/friendships/:requestId/decline",
+   authenticateToken,
+   (req, res) => changeFriendRequestStatus(req, res, "declined")
+ );
+
+app.get("/api/privacy", authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    const result = await pool.query(
+      `SELECT user_id, activity_private, updated_at
+       FROM privacy_settings
+       WHERE user_id = $1`,
+      [userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        message: "Privacy settings not found"
+      });
+    }
+
+    res.status(200).json(result.rows[0]);
+  } catch (error) {
+    console.error("Privacy settings error:", error.message);
+    res.status(500).json({
+      message: "Could not load privacy settings"
+    });
+  }
+});
+
+app.put("/api/privacy", authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { activityPrivate } = req.body;
+
+    if (typeof activityPrivate !== "boolean") {
+      return res.status(400).json({
+        message: "activityPrivate must be a boolean"
+      });
+    }
+
+    const result = await pool.query(
+      `INSERT INTO privacy_settings
+         (user_id, activity_private)
+       VALUES ($1, $2)
+       ON CONFLICT (user_id)
+       DO UPDATE SET
+         activity_private = EXCLUDED.activity_private,
+         updated_at = NOW()
+       RETURNING user_id, activity_private, updated_at`,
+      [userId, activityPrivate]
+    );
+
+    res.status(200).json(result.rows[0]);
+  } catch (error) {
+    console.error("Privacy update error:", error.message);
+    res.status(500).json({
+      message: "Could not update privacy settings"
+    });
+  }
+});
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`)
