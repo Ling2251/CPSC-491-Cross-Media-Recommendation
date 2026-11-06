@@ -107,6 +107,10 @@ jobs:
         working-directory: database/scripts
         run: npm run test:fetch
 
+      - name: Sprint 4 AC4 controlled test (deliberately failing)
+        working-directory: database/scripts
+        run: node test-deliberate-ci-failure.js
+
       - name: Record build version
         run: |
           MIGRATION_COUNT=$(ls database/migrations/*.sql | wc -l)
