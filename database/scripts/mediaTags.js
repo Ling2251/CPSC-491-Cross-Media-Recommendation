@@ -33,4 +33,25 @@ async function getMediaWithTags(pool, mediaId) {
   return { ...media, tags };
 }
 
-module.exports = { assignTag, getMediaWithTags };
+// Sprint 3: the unified media profile downstream consumers (recommendation,
+// search) should actually query -- unlike getMediaWithTags above, this only
+// ever returns status='approved' tags, so a pending_review or rejected
+// candidate can never leak into a recommendation-eligible result.
+async function getEligibleMediaProfile(pool, mediaId) {
+  const { rows: mediaRows } = await pool.query('SELECT * FROM media WHERE id = $1', [mediaId]);
+  const media = mediaRows[0];
+  if (!media) return null;
+
+  const { rows: tags } = await pool.query(
+    `SELECT t.id, t.name, t.category, mt.confidence, mt.source
+     FROM media_tags mt
+     JOIN tag_taxonomy t ON t.id = mt.tag_id
+     WHERE mt.media_id = $1 AND mt.status = 'approved'
+     ORDER BY t.category, t.name`,
+    [mediaId],
+  );
+
+  return { ...media, tags };
+}
+
+module.exports = { assignTag, getMediaWithTags, getEligibleMediaProfile };

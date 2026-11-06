@@ -7,6 +7,7 @@ from typing import Any, Callable, Dict, List, Optional
 import requests
 
 from app.models import Media
+from app.security_logging import Event, log_security_event, safe_url
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +48,8 @@ def _language_name(code: str) -> str:
 class PublicDataCollector:
     """Shared retry/logging behavior for public-source collectors."""
 
+    PROVIDER = "unknown"
+
     def __init__(
         self,
         session: Optional[requests.Session] = None,
@@ -72,7 +75,7 @@ class PublicDataCollector:
 
         for attempt in range(1, self.max_attempts + 1):
             try:
-                logger.info("Requesting public data: %s (attempt %s/%s)", url, attempt, self.max_attempts)
+                logger.info("Requesting %s data (attempt %s/%s)", self.PROVIDER, attempt, self.max_attempts)
                 response = self.session.get(
                     url,
                     params=params,
@@ -93,23 +96,40 @@ class PublicDataCollector:
                     logger.warning(
                         "Retryable response %s from %s; retrying in %.2f seconds",
                         response.status_code,
-                        url,
+                        safe_url(url),
                         delay,
                     )
                     self.sleep_fn(delay)
                     continue
 
                 response.raise_for_status()
-                return response.json()
+                try:
+                    return response.json()
+                except ValueError as exc:
+                    raise ValueError("Invalid JSON from external media provider") from exc
 
             except requests.RequestException as exc:
                 last_error = exc
                 if attempt == self.max_attempts:
-                    logger.error("Public data request failed after %s attempts: %s", self.max_attempts, exc)
+                    response = getattr(exc, "response", None)
+                    log_security_event(
+                        Event.EXTERNAL_API_FAILURE,
+                        f"{self.PROVIDER} request failed after {self.max_attempts} attempts",
+                        component="public-data",
+                        level=logging.ERROR,
+                        status_code=getattr(response, "status_code", None),
+                        reason=type(exc).__name__,
+                        provider=self.PROVIDER,
+                    )
                     raise
 
                 delay = self.backoff_seconds * (2 ** (attempt - 1))
-                logger.warning("Public data request error: %s; retrying in %.2f seconds", exc, delay)
+                logger.warning(
+                    "%s request error (%s); retrying in %.2f seconds",
+                    self.PROVIDER,
+                    type(exc).__name__,
+                    delay,
+                )
                 self.sleep_fn(delay)
 
         if last_error:
@@ -118,6 +138,7 @@ class PublicDataCollector:
 
 
 class TVMazeCollector(PublicDataCollector):
+    PROVIDER = "tvmaze"
     BASE_URL = "https://api.tvmaze.com/search/shows"
 
     def collect(self, query: str = "star", limit: int = 10) -> List[Media]:
@@ -127,8 +148,16 @@ class TVMazeCollector(PublicDataCollector):
         payload = self._request_json(self.BASE_URL, params={"q": query})
         records: List[Media] = []
 
+        if not isinstance(payload, list):
+            raise ValueError("Invalid TVMaze response: expected a list")
         for result in payload[:limit]:
+            if not isinstance(result, dict):
+                logger.warning("Skipping malformed TVMaze result")
+                continue
             show = result.get("show") or {}
+            if not isinstance(show, dict):
+                logger.warning("Skipping malformed TVMaze show")
+                continue
             normalized = self._normalize_show(show)
             if normalized:
                 records.append(normalized)
@@ -169,6 +198,7 @@ class TVMazeCollector(PublicDataCollector):
 
 
 class OpenLibraryCollector(PublicDataCollector):
+    PROVIDER = "open_library"
     BASE_URL = "https://openlibrary.org/search.json"
     DEFAULT_FIELDS = "key,title,subject,language,ratings_average,edition_count"
 
@@ -195,8 +225,13 @@ class OpenLibraryCollector(PublicDataCollector):
             headers={"User-Agent": self.user_agent},
         )
 
+        if not isinstance(payload, dict) or not isinstance(payload.get("docs"), list):
+            raise ValueError("Invalid Open Library response: expected docs list")
         records: List[Media] = []
-        for doc in (payload.get("docs") or [])[:limit]:
+        for doc in payload["docs"][:limit]:
+            if not isinstance(doc, dict):
+                logger.warning("Skipping malformed Open Library document")
+                continue
             normalized = self._normalize_book(doc)
             if normalized:
                 records.append(normalized)

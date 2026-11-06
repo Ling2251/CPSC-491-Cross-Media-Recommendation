@@ -1,40 +1,27 @@
 
-import { useState } from "react";
-import { friendshipService } from "../../services/friendshipservices";
-
-const FriendCard = ({ user }) => {
-  const currentUserId = 1;
-
-  const [requestState, setRequestState] = useState("idle");
-  const [message, setMessage] = useState("");
-
-  const handleAddFriend = () => {
-    setMessage("");
-
-    const result = friendshipService.sendRequest(
-      currentUserId,
-      Number(user.id)
-    );
-
-    setMessage(result.message);
-
-    if (result.success) {
-      setRequestState("sent");
-    } else {
-      setRequestState("idle");
-    }
-  };
-
+const FriendCard = ({
+  user,
+  requestSent,
+  canAddFriend = true,
+  onAddFriend,
+  onViewProfile,
+}) => {
   const scorePct = Math.round(user.similarity_score * 100);
 
   return (
     <article className="fr-card">
       <div className="fr-card-top">
-        <img
-          src={user.profile_pic}
-          alt={user.username}
-          className="fr-avatar"
-        />
+        {user.profile_pic ? (
+          <img
+            src={user.profile_pic}
+            alt={user.username}
+            className="fr-avatar"
+          />
+        ) : (
+          <div aria-hidden="true" className="fr-avatar fr-avatar-fallback">
+            {user.username.slice(0, 1).toUpperCase()}
+          </div>
+        )}
 
         <div className="fr-identity">
           <h3 className="fr-username">
@@ -56,41 +43,38 @@ const FriendCard = ({ user }) => {
         />
       </div>
 
-      <p className="fr-bio">{user.bio}</p>
+      {user.bio && <p className="fr-bio">{user.bio}</p>}
 
-      <div className="fr-tags">
-        {user.shared_tags.slice(0, 4).map((tag) => (
-          <span key={tag} className="fr-tag">
-            {tag}
-          </span>
-        ))}
-      </div>
+      {user.shared_tags?.length > 0 && (
+        <div className="fr-tags">
+          {user.shared_tags.slice(0, 4).map((tag) => (
+            <span key={tag} className="fr-tag">
+              {tag}
+            </span>
+          ))}
+        </div>
+      )}
 
       <div className="fr-actions">
         <button
           type="button"
           className="fr-btn-secondary"
+          onClick={() => onViewProfile(user)}
         >
           View Profile
         </button>
 
-        <button
-          type="button"
-          className="fr-btn-primary"
-          onClick={handleAddFriend}
-          disabled={requestState === "sent"}
-        >
-          {requestState === "sent"
-            ? "Request Sent ✓"
-            : "Add Friend"}
-        </button>
+        {canAddFriend && (
+          <button
+            type="button"
+            className="fr-btn-primary"
+            onClick={() => onAddFriend(user)}
+            disabled={requestSent}
+          >
+            {requestSent ? "Request Sent ✓" : "Add Friend"}
+          </button>
+        )}
       </div>
-
-      {message && (
-        <p className="fr-subtitle" role="status">
-          {message}
-        </p>
-      )}
     </article>
   );
 };

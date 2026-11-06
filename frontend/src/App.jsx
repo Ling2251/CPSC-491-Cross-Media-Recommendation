@@ -1,5 +1,6 @@
+
 import { useState } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 
 import LandingPage from "./pages/Landing/LandingPage.jsx";
 import Dashboard from "./pages/Dashboard";
@@ -7,6 +8,7 @@ import FriendsPage from "./pages/Friends/FriendsPage";
 import Login from "./pages/Login";
 import Onboarding from "./pages/Onboarding";
 import Signup from "./pages/Signup";
+import FriendSuggestionsPage from "./pages/FriendSuggestionsPage";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -20,27 +22,65 @@ function App() {
     setUser(null);
   }
 
-  const accountPage = !user
-    ? <Login onLogin={handleLogin} />
-    : user.account_state === "ONBOARDING_REQUIRED" || user.account_state === "CREATED"
-      ? <Onboarding onLogout={handleLogout} />
-      : user.account_state === "ACTIVE"
-        ? <Dashboard onLogout={handleLogout} />
-        : <p>Unknown account state.</p>;
+  const accountState = user?.account_state?.toUpperCase();
+
+  function renderDashboard() {
+    if (!user) {
+      return <Login onLogin={handleLogin} />;
+    }
+
+    if (
+      accountState === "CREATED" ||
+      accountState === "ONBOARDING_REQUIRED"
+    ) {
+      return <Onboarding onLogout={handleLogout} />;
+    }
+
+    if (accountState === "ACTIVE") {
+      return <Dashboard onLogout={handleLogout} />;
+    }
+
+    return <p>Unknown account state.</p>;
+  }
 
   return (
     <Routes>
+      <Route path="/" element={<LandingPage />} />
+
+      <Route
+        path="/login"
+        element={renderDashboard()}
+      />
+
+      <Route
+        path="/dashboard"
+        element={renderDashboard()}
+      />
+
+      <Route
+        path="/friends"
+        element={<FriendsPage />}
+      />
+
       <Route
         path="/manage-friends"
         element={<FriendsPage />}
       />
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/" element={accountPage} />
-      <Route path="/login" element={accountPage} />
-      <Route path="/friends" element={<FriendsPage />} />
-      <Route path="/manage-friends" element={<FriendsPage />} />
-      <Route path="/signup" element={<Signup />} />
-      <Route path="*" element={accountPage} />
+
+      <Route
+        path="/suggestions"
+        element={<FriendSuggestionsPage />}
+      />
+
+      <Route
+        path="/signup"
+        element={<Signup />}
+      />
+
+      <Route
+        path="*"
+        element={<Navigate to="/" replace />}
+      />
     </Routes>
   );
 }

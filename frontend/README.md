@@ -1,16 +1,15 @@
-# React + Vite
+# Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This React application is built with Vite. From this directory, run
+`npm install` to install dependencies and `npm run dev` to start the development
+server.
 
-Currently, two official plugins are available:
+Friend Suggestions uses the authenticated Node API at `http://localhost:3001`
+for friend requests and the Python FastAPI backend at `http://localhost:8000`
+for ranked recommendations. Set `VITE_API_URL` or
+`VITE_RECOMMENDATION_API_URL` to override these addresses. Both backends must use
+the same `JWT_SECRET`. Start the Python API from `backend/` with
+`uvicorn app.friend_recommendation.http_app:app --reload`.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+See [TESTING.md](./TESTING.md) for automated checks and Friend Suggestions UI
+validation notes.

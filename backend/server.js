@@ -1,21 +1,25 @@
-require("dotenv").config()
+require("dotenv").config();
 
-const express = require("express")
-const cors = require("cors")
-const pool = require("./db")
-const bcrypt = require("bcrypt")
-const jwt = require("jsonwebtoken")
+const express = require("express");
+const cors = require("cors");
+const pool = require("./db");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const friendshipRoutes = require("./routes/friendshipRoutes");
 
-const app = express()
-const PORT = 3001
-const JWT_SECRET = process.env.JWT_SECRET
+const app = express();
+const PORT = 3001;
+const JWT_SECRET = process.env.JWT_SECRET;
 
 if (!JWT_SECRET || JWT_SECRET.trim().length === 0) {
   throw new Error("JWT_SECRET must be configured");
 }
 
-app.use(cors())
-app.use(express.json())
+app.use(cors());
+app.use(express.json());
+
+// Friendship API
+app.use("/api/friends", friendshipRoutes);
 
 // Middleware to verify JWT authentication
 function authenticateToken(req, res, next) {
@@ -27,19 +31,19 @@ function authenticateToken(req, res, next) {
 
   if (!token) {
     return res.status(401).json({
-      message: "Authentication required"
+      message: "Authentication required",
     });
   }
 
   try {
     req.user = jwt.verify(token, JWT_SECRET, {
-      algorithms: ["HS256"]
+      algorithms: ["HS256"],
     });
 
     next();
   } catch (error) {
     return res.status(401).json({
-      message: "Invalid or expired token"
+      message: "Invalid or expired token",
     });
   }
 }
