@@ -1,15 +1,16 @@
+import json
 import logging
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+
 from app.models import RecommendationResponse
 from app.security import get_current_user_id
 from app.security_logging import (
     Event,
     configure_logging,
-    get_request_id,
     hash_client,
     log_security_event,
     log_validation_errors,
@@ -18,8 +19,8 @@ from app.security_logging import (
     resolve_request_id,
 )
 from app.services.generator import DummyDataGenerator
-from app.services.validator import DataValidator
 from app.services.recommender import BaselineRecommender
+from app.services.validator import DataValidator
 
 configure_logging()
 
@@ -100,13 +101,13 @@ def health_check():
             "users": users_valid,
             "media": media_valid,
             "ratings": ratings_valid,
-            "preferences": prefs_valid
+            "preferences": prefs_valid,
         },
         "data_summary": {
             "total_users": len(users),
             "total_media": len(media),
-            "total_ratings": len(ratings)
-        }
+            "total_ratings": len(ratings),
+        },
     }
 
 
@@ -118,7 +119,7 @@ def generate_data():
         "media_count": len(media),
         "ratings_count": len(ratings),
         "sample_user": users[0].model_dump() if users else None,
-        "sample_media": media[0].model_dump() if media else None
+        "sample_media": media[0].model_dump() if media else None,
     }
 
 
@@ -142,7 +143,6 @@ def get_recommendations(
         raise HTTPException(status_code=403, detail="Not authorized to view these recommendations")
 
     user = next((u for u in users if u.user_id == user_id), None)
-
     if not user:
         raise HTTPException(status_code=404, detail=f"User {user_id} not found")
 
@@ -159,12 +159,10 @@ def get_recommendations(
         )
         raise HTTPException(status_code=500, detail="Recommendation calculation failed")
 
-    return RecommendationResponse(
-        user_id=user_id,
-        recommendations=recommendations
-    )
+    return RecommendationResponse(user_id=user_id, recommendations=recommendations)
 
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)
