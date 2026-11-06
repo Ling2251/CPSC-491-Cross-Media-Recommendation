@@ -119,6 +119,40 @@ describe("FriendsPageApi - React Component Tests", () => {
     localStorage.clear();
   });
 
+  test("sends an authenticated friend request and refreshes lists", async () => {
+    const user = userEvent.setup();
+    friendshipApi.sendRequest.mockResolvedValue({ success: true });
+    render(<FriendsPageApi />);
+    await waitForPage();
+    await user.type(screen.getByLabelText("User ID"), "5");
+    await user.click(screen.getByRole("button", { name: "Send Request" }));
+    await waitFor(() => expect(friendshipApi.sendRequest).toHaveBeenCalledWith(5));
+    expect(await screen.findByText("Friend request sent.")).toBeInTheDocument();
+    expect(screen.getByLabelText("User ID")).toHaveValue(null);
+    expect(friendshipApi.getOutgoingRequests).toHaveBeenCalledTimes(2);
+  });
+
+  test("prevents sending a friend request to the current user", async () => {
+    const user = userEvent.setup();
+    render(<FriendsPageApi />);
+    await waitForPage();
+    await user.type(screen.getByLabelText("User ID"), "1");
+    await user.click(screen.getByRole("button", { name: "Send Request" }));
+    expect(await screen.findByText("You cannot send a friend request to yourself.")).toBeInTheDocument();
+    expect(friendshipApi.sendRequest).not.toHaveBeenCalled();
+  });
+
+  test("shows API errors when a friend request is rejected", async () => {
+    const user = userEvent.setup();
+    friendshipApi.sendRequest.mockRejectedValue(new Error("A friendship or request already exists."));
+    render(<FriendsPageApi />);
+    await waitForPage();
+    await user.type(screen.getByLabelText("User ID"), "5");
+    await user.click(screen.getByRole("button", { name: "Send Request" }));
+    expect(await screen.findByText("A friendship or request already exists.")).toBeInTheDocument();
+    expect(screen.getByLabelText("User ID")).toHaveValue(5);
+  });
+
   // ==========================================
   // 1. LOADING STATE
   // ==========================================

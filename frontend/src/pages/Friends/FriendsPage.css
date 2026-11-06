@@ -321,3 +321,25 @@
   border-color: #ed6227;
   color: #ed6227;
 }
+
+/* Sprint 4: authenticated friend-request form */
+.fr-send-form {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 16px 0 28px;
+}
+.fr-send-form label { font-weight: 600; }
+.fr-send-form input {
+  min-width: 210px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid #777;
+  background: #222;
+  color: #fff;
+}
+.fr-send-form button { padding: 10px 18px; border-radius: 24px; }
+.fr-send-form input:focus-visible, .fr-send-form button:focus-visible {
+  outline: 2px solid #ed6227; outline-offset: 2px;
+}
