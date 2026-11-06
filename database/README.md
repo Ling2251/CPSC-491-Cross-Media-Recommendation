@@ -70,6 +70,15 @@ database `cross_media_recommendation`.
 | `tag_taxonomy` | Controlled vocabulary of tags (genre, mood, theme, era, style, pacing, trope, setting, instrumentation, audience) |
 | `media_tags`   | Many-to-many join between `media` and `tag_taxonomy`, carrying `confidence`, `source` (`external`/`auto`/`manual`/`user`), and `status` (`approved`/`pending_review`/`rejected`) |
 
+## Media providers
+
+Two ETL adapters currently feed the `media`/`media_tags` pipeline, both following the same contract (`normalizeRecord`, `fetchWithRetry`) so the storage and tagging layer treats them identically:
+
+- **TMDb** (`scripts/adapters/tmdb.js`) — movies, `media_type='movie'`, `external_source='tmdb'`. Maps TMDb numeric genre IDs to tags via `GENRE_MAP`.
+- **Open Library** (`scripts/adapters/openlibrary.js`) — books, `media_type='book'`, `external_source='openlibrary'`. Maps Open Library subject strings to tags via `SUBJECT_MAP`; requires no API key. Book-specific genre tags (`Non-Fiction`, `Biography`, `Poetry`, `Classic Literature`) are seeded separately in `seed/seed_book_tags.sql`, since they have no equivalent in the original movie-oriented seed data.
+
+Both providers' normalized records flow through the same `insertMediaIfNew`, `assignTag`, `adapters/candidateGenerator.js`, and `tagThreshold.js` — none of that downstream code is provider-specific.
+
 ## Adding a new migration
 
 Add a new file to `migrations/` numbered one higher than the last
