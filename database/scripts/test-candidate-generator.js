@@ -52,4 +52,36 @@ check('generateCandidates produces nothing without a releaseDate', () => {
   assert.deepStrictEqual(generateCandidates(null), []);
 });
 
+// Sprint 4 (IMPL-232): generateCandidates only ever reads media.releaseDate,
+// so it should work identically for a book as for a movie without any code
+// change. These tests prove that generalization explicitly, using the exact
+// shape the Open Library adapter's normalizeRecord() produces (mediaType
+// 'book', releaseDate as 'YYYY-01-01').
+check('generateCandidates produces a correct era candidate for a book', () => {
+  const bookMedia = {
+    title: 'The Hobbit',
+    mediaType: 'book',
+    externalSource: 'openlibrary',
+    externalId: 'OL45883W',
+    releaseDate: '1990-01-01',
+  };
+  const candidates = generateCandidates(bookMedia);
+  assert.strictEqual(candidates.length, 1);
+  assert.strictEqual(candidates[0].name, '1990s');
+  assert.strictEqual(candidates[0].category, 'era');
+  assert.strictEqual(candidates[0].confidence, ERA_CONFIDENCE);
+});
+
+check('a book and a movie with the same release year produce the same era candidate', () => {
+  const movieCandidates = generateCandidates({ mediaType: 'movie', releaseDate: '2022-05-24' });
+  const bookCandidates = generateCandidates({ mediaType: 'book', releaseDate: '2022-01-01' });
+  assert.strictEqual(movieCandidates[0].name, bookCandidates[0].name);
+  assert.strictEqual(movieCandidates[0].confidence, bookCandidates[0].confidence);
+});
+
+check('a book published before the 1980s correctly produces no era candidate', () => {
+  const candidates = generateCandidates({ mediaType: 'book', releaseDate: '1937-01-01' });
+  assert.deepStrictEqual(candidates, []);
+});
+
 console.log(`\n${passed} candidate generator tests passed`);
