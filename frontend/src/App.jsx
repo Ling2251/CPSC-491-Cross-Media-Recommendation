@@ -21,11 +21,12 @@ function App() {
     setUser(null);
   }
 
+  const accountState = user?.account_state?.toUpperCase();
   const accountPage = !user
     ? <Login onLogin={handleLogin} />
-    : user.account_state === "ONBOARDING_REQUIRED" || user.account_state === "CREATED"
+    : accountState === "ONBOARDING_REQUIRED" || accountState === "CREATED"
       ? <Onboarding onLogout={handleLogout} />
-      : user.account_state === "ACTIVE"
+      : accountState === "ACTIVE"
         ? <Dashboard onLogout={handleLogout} />
         : <p>Unknown account state.</p>;
 
