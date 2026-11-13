@@ -24,7 +24,8 @@ function FriendSuggestionsPage({ userId }) {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
-  const [busy, setBusy] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [sendingUserId, setSendingUserId] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
 
   const fetchSuggestions = useCallback(
@@ -45,15 +46,16 @@ function FriendSuggestionsPage({ userId }) {
       return {
         recommendations: result.recommendations,
         relationships,
-        userId: isGuest ? result.userId : userId,
+        userId: userId ?? result.userId,
       };
     },
     [isGuest, userId]
   );
 
   const loadRecommendations = useCallback(async () => {
-    setBusy(true);
+    setRefreshing(true);
     setError("");
+    setMessage("");
 
     try {
       const result = await fetchSuggestions();
@@ -65,7 +67,7 @@ function FriendSuggestionsPage({ userId }) {
       setError(loadError.message);
     } finally {
       setLoading(false);
-      setBusy(false);
+      setRefreshing(false);
     }
   }, [fetchSuggestions]);
 
@@ -105,23 +107,29 @@ function FriendSuggestionsPage({ userId }) {
     )
   );
 
-  const eligibleUsers = recommendations.filter(
-    (user) =>
-      Number(user.user_id) !== Number(recommendationUserId) &&
-      !connectedUserIds.has(Number(user.user_id))
-  );
+  const eligibleUsers = recommendations
+    .filter(
+      (user) =>
+        Number(user.user_id) !== Number(recommendationUserId) &&
+        !connectedUserIds.has(Number(user.user_id))
+    )
+    .sort(
+      (userA, userB) =>
+        Number(userB.similarity_score) - Number(userA.similarity_score)
+    );
 
   const visibleUsers =
     activeFilter === "all"
       ? eligibleUsers
       : eligibleUsers.filter((user) =>
+          Array.isArray(user.media_types) &&
           user.media_types.includes(activeFilter)
         );
 
   const handleAddFriend = async (user) => {
-    if (isGuest) return;
+    if (isGuest || sendingUserId !== null) return;
 
-    setBusy(true);
+    setSendingUserId(user.user_id);
     setError("");
     setMessage("");
 
@@ -130,7 +138,7 @@ function FriendSuggestionsPage({ userId }) {
       setRelationships((current) => [
         ...current,
         {
-          requesterId: userId,
+          requesterId: recommendationUserId,
           receiverId: user.user_id,
           status: FriendshipStatus.PENDING,
         },
@@ -139,18 +147,37 @@ function FriendSuggestionsPage({ userId }) {
     } catch (requestError) {
       setError(requestError.message);
     } finally {
-      setBusy(false);
+      setSendingUserId(null);
     }
   };
+
+  useEffect(() => {
+    if (!selectedUser) return undefined;
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") setSelectedUser(null);
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedUser]);
+
+  const selectedScores = selectedUser?.scores || {};
+  const scoreLabels = [
+    ["video", "Movies"],
+    ["audio", "Music"],
+    ["text", "Books"],
+  ];
 
   return (
     <main className="fr-page suggestions-page">
       <header className="fr-header suggestions-header">
         <div>
+          <p className="suggestions-eyebrow">YOUR NEXT GREAT CONNECTION</p>
           <h1 className="fr-title">Friend Suggestions</h1>
           <p className="fr-subtitle">
-            Discover people who share your interests across movies, music,
-            and books.
+            Find people who share your taste in movies, music, and books.
+            Recommendations are ranked by your shared interests.
           </p>
         </div>
         <div className="suggestions-header-actions">
@@ -162,10 +189,10 @@ function FriendSuggestionsPage({ userId }) {
           <button
             className="fr-btn-primary"
             type="button"
-            disabled={busy}
+            disabled={refreshing || sendingUserId !== null}
             onClick={loadRecommendations}
           >
-            {busy ? "Loading..." : "Refresh Recommendations"}
+            {refreshing ? "Refreshing..." : "Refresh Recommendations"}
           </button>
         </div>
       </header>
@@ -187,26 +214,68 @@ function FriendSuggestionsPage({ userId }) {
         </p>
       )}
 
-      <nav className="suggestions-filters" aria-label="Filter suggestions">
-        {FILTERS.map((filter) => (
-          <button
-            key={filter.value}
-            type="button"
-            className={
-              activeFilter === filter.value
-                ? "suggestions-filter is-active"
-                : "suggestions-filter"
-            }
-            aria-pressed={activeFilter === filter.value}
-            onClick={() => setActiveFilter(filter.value)}
-          >
-            {filter.label}
-          </button>
-        ))}
-      </nav>
+      <section
+        className="suggestions-controls"
+        aria-label="Recommendation controls"
+      >
+        <div>
+          <h2 className="suggestions-section-title">People you may like</h2>
+          <p className="suggestions-section-caption">
+            {loading
+              ? "Finding your best matches..."
+              : `${visibleUsers.length} ${
+                  visibleUsers.length === 1 ? "person" : "people"
+                }${
+                  activeFilter === "all"
+                    ? ""
+                    : ` in ${
+                        FILTERS.find(
+                          (filter) => filter.value === activeFilter
+                        )?.label
+                      }`
+                }`}
+          </p>
+        </div>
+        <nav className="suggestions-filters" aria-label="Filter suggestions">
+          {FILTERS.map((filter) => (
+            <button
+              key={filter.value}
+              type="button"
+              className={
+                activeFilter === filter.value
+                  ? "suggestions-filter is-active"
+                  : "suggestions-filter"
+              }
+              aria-pressed={activeFilter === filter.value}
+              onClick={() => setActiveFilter(filter.value)}
+            >
+              {filter.label}
+            </button>
+          ))}
+        </nav>
+      </section>
 
       {loading ? (
-        <p role="status">Loading recommendations...</p>
+        <div className="suggestions-loading" role="status" aria-live="polite">
+          <span className="suggestions-spinner" aria-hidden="true" />
+          <span>Finding people who share your interests...</span>
+        </div>
+      ) : error && recommendations.length === 0 ? (
+        <section className="fr-empty suggestions-failure" aria-live="polite">
+          <div className="suggestions-empty-icon" aria-hidden="true">
+            !
+          </div>
+          <h2>We couldn’t load your suggestions</h2>
+          <p>Check your connection and try again.</p>
+          <button
+            className="fr-btn-primary"
+            type="button"
+            disabled={refreshing}
+            onClick={loadRecommendations}
+          >
+            {refreshing ? "Trying again..." : "Try again"}
+          </button>
+        </section>
       ) : visibleUsers.length > 0 ? (
         <section aria-label="Recommended users">
           <div className="fr-grid">
@@ -220,7 +289,7 @@ function FriendSuggestionsPage({ userId }) {
                   bio: user.bio,
                   shared_tags: user.shared_tags || [],
                 }}
-                requestSent={busy}
+                requestSent={sendingUserId === user.user_id}
                 canAddFriend={!isGuest}
                 onAddFriend={handleAddFriend}
                 onViewProfile={setSelectedUser}
@@ -230,12 +299,28 @@ function FriendSuggestionsPage({ userId }) {
         </section>
       ) : (
         <section className="fr-empty" aria-live="polite">
-          <h2>No suggestions found</h2>
+          <div className="suggestions-empty-icon" aria-hidden="true">
+            ✦
+          </div>
+          <h2>
+            {eligibleUsers.length === 0
+              ? "You’re all caught up"
+              : "No matches in this category"}
+          </h2>
           <p>
             {eligibleUsers.length === 0
-              ? "You are all caught up. Check back for more people to discover."
+              ? "There aren’t any new people to show right now. Refresh later to see new recommendations."
               : `There are no suggestions in ${FILTERS.find((filter) => filter.value === activeFilter)?.label}. Try another filter.`}
           </p>
+          {activeFilter !== "all" && eligibleUsers.length > 0 && (
+            <button
+              className="fr-btn-secondary"
+              type="button"
+              onClick={() => setActiveFilter("all")}
+            >
+              Show all suggestions
+            </button>
+          )}
         </section>
       )}
 
@@ -250,6 +335,7 @@ function FriendSuggestionsPage({ userId }) {
             className="suggestions-dialog"
             onClick={(event) => event.stopPropagation()}
             role="dialog"
+            tabIndex={-1}
           >
             <button
               aria-label="Close profile"
@@ -267,17 +353,51 @@ function FriendSuggestionsPage({ userId }) {
               />
             ) : (
               <div aria-hidden="true" className="fr-avatar fr-avatar-fallback">
-                {selectedUser.username.slice(0, 1).toUpperCase()}
+                {(selectedUser.username || "N").slice(0, 1).toUpperCase()}
               </div>
             )}
             <h2 id="suggestion-profile-title">{selectedUser.username}</h2>
-            {selectedUser.bio && <p>{selectedUser.bio}</p>}
-            <p>
-              {Math.round(selectedUser.similarity_score * 100)}% interest
-              match
+            <p className="suggestions-dialog-match">
+              {Math.round(selectedUser.similarity_score * 100)}% interest match
             </p>
+            <p className="suggestions-dialog-bio">
+              {selectedUser.bio ||
+                "This person hasn’t added a bio yet. Explore the interests you have in common below."}
+            </p>
+            <div className="suggestions-score-breakdown">
+              {scoreLabels.map(([mediaType, label]) => (
+                <div className="suggestions-score-row" key={mediaType}>
+                  <span>{label}</span>
+                  <div
+                    className="suggestions-score-track"
+                    role="progressbar"
+                    aria-label={`${label} match`}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-valuenow={Math.round(
+                      Number(selectedScores[mediaType] || 0) * 100
+                    )}
+                  >
+                    <span
+                      style={{
+                        width: `${Math.min(
+                          100,
+                          Math.max(
+                            0,
+                            Number(selectedScores[mediaType] || 0) * 100
+                          )
+                        )}%`,
+                      }}
+                    />
+                  </div>
+                  <strong>
+                    {Math.round(Number(selectedScores[mediaType] || 0) * 100)}%
+                  </strong>
+                </div>
+              ))}
+            </div>
             {selectedUser.shared_tags?.length > 0 && (
-              <div className="fr-tags">
+              <div className="fr-tags" aria-label="Shared interests">
                 {selectedUser.shared_tags.map((tag) => (
                   <span className="fr-tag" key={tag}>
                     {tag}

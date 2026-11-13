@@ -6,7 +6,11 @@ const FriendCard = ({
   onAddFriend,
   onViewProfile,
 }) => {
-  const scorePct = Math.round(user.similarity_score * 100);
+  const scorePct = Math.min(
+    100,
+    Math.max(0, Math.round(Number(user.similarity_score) * 100) || 0)
+  );
+  const username = user.username || "New member";
 
   return (
     <article className="fr-card">
@@ -14,19 +18,17 @@ const FriendCard = ({
         {user.profile_pic ? (
           <img
             src={user.profile_pic}
-            alt={user.username}
+            alt={`${username}'s profile`}
             className="fr-avatar"
           />
         ) : (
           <div aria-hidden="true" className="fr-avatar fr-avatar-fallback">
-            {user.username.slice(0, 1).toUpperCase()}
+            {username.slice(0, 1).toUpperCase()}
           </div>
         )}
 
         <div className="fr-identity">
-          <h3 className="fr-username">
-            {user.username}
-          </h3>
+          <h3 className="fr-username">{username}</h3>
 
           <span className="fr-score-label">
             {scorePct}% match
@@ -34,7 +36,14 @@ const FriendCard = ({
         </div>
       </div>
 
-      <div className="fr-score-bar">
+      <div
+        className="fr-score-bar"
+        role="progressbar"
+        aria-label={`${scorePct}% interest match`}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={scorePct}
+      >
         <div
           className="fr-score-fill"
           style={{
@@ -60,6 +69,7 @@ const FriendCard = ({
           type="button"
           className="fr-btn-secondary"
           onClick={() => onViewProfile(user)}
+          aria-label={`View ${username}'s profile`}
         >
           View Profile
         </button>
@@ -70,8 +80,13 @@ const FriendCard = ({
             className="fr-btn-primary"
             onClick={() => onAddFriend(user)}
             disabled={requestSent}
+            aria-label={
+              requestSent
+                ? `Sending friend request to ${username}`
+                : `Add ${username} as a friend`
+            }
           >
-            {requestSent ? "Request Sent ✓" : "Add Friend"}
+            {requestSent ? "Sending..." : "Add Friend"}
           </button>
         )}
       </div>

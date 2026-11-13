@@ -108,7 +108,9 @@ describe("FriendSuggestionsPage", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Movies" }));
-    expect(screen.getByText("No suggestions found")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "No matches in this category" })
+    ).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "All" }));
     expect(screen.getByText("BookishBen")).toBeInTheDocument();
@@ -119,7 +121,9 @@ describe("FriendSuggestionsPage", () => {
     const lunaName = await screen.findByText("LoFiLuna");
     const card = lunaName.closest("article");
 
-    fireEvent.click(within(card).getByRole("button", { name: "Add Friend" }));
+    fireEvent.click(
+      within(card).getByRole("button", { name: "Add LoFiLuna as a friend" })
+    );
 
     expect(await screen.findByRole("status")).toHaveTextContent(
       "Friend request sent."
@@ -133,7 +137,7 @@ describe("FriendSuggestionsPage", () => {
 
     const lunaCard = (await screen.findByText("LoFiLuna")).closest("article");
     fireEvent.click(
-      within(lunaCard).getByRole("button", { name: "View Profile" })
+      within(lunaCard).getByRole("button", { name: "View LoFiLuna's profile" })
     );
 
     const dialog = screen.getByRole("dialog");
@@ -141,6 +145,13 @@ describe("FriendSuggestionsPage", () => {
       within(dialog).getByRole("heading", { name: "LoFiLuna" })
     ).toBeInTheDocument();
     expect(within(dialog).getByText("jazz")).toBeInTheDocument();
+    expect(within(dialog).getByText("70%")).toBeInTheDocument();
+    expect(
+      within(dialog).getByText(/hasn’t added a bio yet/)
+    ).toBeInTheDocument();
+    expect(
+      within(dialog).getByRole("progressbar", { name: "Music match" })
+    ).toHaveAttribute("aria-valuenow", "70");
 
     fireEvent.click(
       within(dialog).getByRole("button", { name: "Close profile" })
@@ -160,7 +171,9 @@ describe("FriendSuggestionsPage", () => {
       screen.getByRole("button", { name: "Refresh Recommendations" })
     );
 
-    expect(await screen.findByText("No suggestions found")).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: "You’re all caught up" })
+    ).toBeInTheDocument();
     expect(friendRecommendationApi.getRecommendations).toHaveBeenCalledTimes(2);
   });
 
@@ -175,6 +188,14 @@ describe("FriendSuggestionsPage", () => {
       "Recommendation service unavailable."
     );
     expect(screen.queryByText("LoFiLuna")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", {
+        name: "We couldn’t load your suggestions",
+      })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: "You’re all caught up" })
+    ).not.toBeInTheDocument();
   });
 
   test("shows recommendations to guests without loading friendship data", async () => {
@@ -184,11 +205,44 @@ describe("FriendSuggestionsPage", () => {
     expect(await screen.findByText("LoFiLuna")).toBeInTheDocument();
     expect(screen.getByText(/Guest preview as user #1/)).toBeInTheDocument();
     expect(
-      screen.getAllByRole("button", { name: "View Profile" }).length
+      screen.getAllByRole("button", { name: /View .*'s profile/ }).length
     ).toBeGreaterThan(0);
     expect(
-      screen.queryByRole("button", { name: "Add Friend" })
+      screen.queryByRole("button", { name: /Add .* as a friend/ })
     ).not.toBeInTheDocument();
     expect(friendshipApi.getFriends).not.toHaveBeenCalled();
+  });
+
+  test("closes the profile preview with Escape", async () => {
+    render(<FriendSuggestionsPage userId={1} />);
+
+    const lunaCard = (await screen.findByText("LoFiLuna")).closest("article");
+    fireEvent.click(
+      within(lunaCard).getByRole("button", { name: "View LoFiLuna's profile" })
+    );
+
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    fireEvent.keyDown(window, { key: "Escape" });
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  test("keeps a suggestion visible and reports a failed friend request", async () => {
+    friendshipApi.sendRequest.mockRejectedValueOnce(
+      new Error("Friend request failed.")
+    );
+    render(<FriendSuggestionsPage userId={1} />);
+
+    const lunaCard = (await screen.findByText("LoFiLuna")).closest("article");
+    fireEvent.click(
+      within(lunaCard).getByRole("button", { name: "Add LoFiLuna as a friend" })
+    );
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Friend request failed."
+    );
+    expect(screen.getByText("LoFiLuna")).toBeInTheDocument();
+    expect(
+      within(lunaCard).getByRole("button", { name: "Add LoFiLuna as a friend" })
+    ).toBeEnabled();
   });
 });
