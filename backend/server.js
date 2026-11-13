@@ -7,6 +7,8 @@ const bcrypt = require("bcrypt")
 const jwt = require("jsonwebtoken")
 const friendshipRoutes = require("./routes/friendshipRoutes");
 const activityRoutes = require("./routes/activityRoutes");
+const mediaInteractionRoutes = require("./routes/mediaInteractionRoutes");
+const mediaReviewRoutes = require("./routes/mediaReviewRoutes");
 
 const app = express()
 const PORT = 3001
@@ -25,6 +27,10 @@ app.use(express.json())
 app.use("/api/friends", friendshipRoutes);
 
 app.use("/api/activities", activityRoutes);
+
+app.use("/api/media-interactions", mediaInteractionRoutes);
+
+app.use("/api/reviews", mediaReviewRoutes);
 
 // Middleware to verify JWT authentication
 function authenticateToken(req, res, next) {
