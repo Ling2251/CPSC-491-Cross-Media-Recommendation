@@ -1,4 +1,9 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  within,
+} from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { describe, expect, test, vi } from "vitest";
 import App from "./App";
@@ -45,6 +50,27 @@ describe("App account routing", () => {
     expect(
       screen.getByRole("heading", { name: "User Dashboard" })
     ).toBeInTheDocument();
-    expect(screen.queryByText("Unknown account state.")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Unknown account state.")
+    ).not.toBeInTheDocument();
+  });
+
+  test("renders the shared navigation on the suggestions route", () => {
+    render(
+      <MemoryRouter initialEntries={["/suggestions"]}>
+        <App />
+      </MemoryRouter>
+    );
+
+    const navigation = screen.getByRole("navigation", {
+      name: "Main navigation",
+    });
+
+    expect(
+      within(navigation).getByRole("link", { name: "Friend Suggestions" })
+    ).toHaveAttribute("href", "/suggestions");
+    expect(
+      within(navigation).getByRole("link", { name: "Friends" })
+    ).toHaveAttribute("href", "/friends");
   });
 });

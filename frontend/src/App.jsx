@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Routes, Route } from "react-router-dom";
+import AppHeader from "./components/AppHeader";
 
 import LandingPage from "./pages/Landing/LandingPage.jsx";
 import Dashboard from "./pages/Dashboard";
@@ -31,23 +32,26 @@ function App() {
         : <p>Unknown account state.</p>;
 
   return (
-    <Routes>
-      <Route
-        path="/manage-friends"
-        element={<FriendsPage />}
-      />
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/" element={accountPage} />
-      <Route path="/login" element={accountPage} />
-      <Route path="/friends" element={<FriendsPage />} />
-      <Route path="/manage-friends" element={<FriendsPage />} />
-      <Route
-        path="/suggestions"
-        element={<FriendSuggestionsPage userId={user?.id} />}
-      />
-      <Route path="/signup" element={<Signup />} />
-      <Route path="*" element={accountPage} />
-    </Routes>
+    <>
+      <AppHeader />
+      <Routes>
+        <Route
+          path="/manage-friends"
+          element={<FriendsPage />}
+        />
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/" element={accountPage} />
+        <Route path="/login" element={accountPage} />
+        <Route path="/friends" element={<FriendsPage />} />
+        <Route path="/manage-friends" element={<FriendsPage />} />
+        <Route
+          path="/suggestions"
+          element={<FriendSuggestionsPage userId={user?.id} />}
+        />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="*" element={accountPage} />
+      </Routes>
+    </>
   );
 }
 

@@ -67,21 +67,6 @@ export default function LandingPage() {
 
   return (
     <div className="auth-landing">
-      <header className="auth-navbar">
-        <a className="auth-logo" href="/">
-          Main-page
-        </a>
-
-        <nav className="auth-nav">
-          <a href="/">Home</a>
-          <a href="/discover">Discover</a>
-          <a href="/friends">Friends</a>
-          <a href="/suggestions">Friend Suggestions</a>
-          <a href="/forums">Forums</a>
-          <a href="/profile">Profile</a>
-        </nav>
-      </header>
-
       <main className="auth-layout">
         {/* LEFT SIDE */}
         <section className="auth-intro">
