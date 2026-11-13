@@ -9,6 +9,7 @@ import Login from "./pages/Login";
 import Onboarding from "./pages/Onboarding";
 import Signup from "./pages/Signup";
 import FriendSuggestionsPage from "./pages/FriendSuggestionsPage";
+import ActivityFeedPage from "./pages/ActivityFeed/ActivityFeedPage";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -80,6 +81,11 @@ function App() {
       <Route
         path="*"
         element={<Navigate to="/" replace />}
+      />
+
+      <Route
+        path="/activity-feed"
+        element={<ActivityFeedPage />}
       />
     </Routes>
   );

@@ -9,6 +9,8 @@ const friendshipRoutes = require("./routes/friendshipRoutes");
 const activityRoutes = require("./routes/activityRoutes");
 const mediaInteractionRoutes = require("./routes/mediaInteractionRoutes");
 const mediaReviewRoutes = require("./routes/mediaReviewRoutes");
+const activityFeedRoutes = require("./routes/activityFeedRoutes");
+const activityPrivacyRoutes = require("./routes/activityPrivacyRoutes");
 
 const app = express()
 const PORT = 3001
@@ -29,6 +31,10 @@ app.use("/api/friends", friendshipRoutes);
 app.use("/api/activities", activityRoutes);
 
 app.use("/api/media-interactions", mediaInteractionRoutes);
+
+app.use("/api/privacy", activityPrivacyRoutes);
+
+app.use("/api/feed", activityFeedRoutes);
 
 app.use("/api/reviews", mediaReviewRoutes);
 

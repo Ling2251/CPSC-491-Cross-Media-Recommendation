@@ -1,0 +1,134 @@
+
+.activity-feed-page {
+  max-width: 850px;
+  margin: 0 auto;
+  padding: 32px 20px;
+}
+
+.activity-feed-header {
+  margin-bottom: 28px;
+}
+
+.activity-feed-header h1 {
+  margin-bottom: 8px;
+}
+
+.activity-feed-header p {
+  color: #777;
+  margin-bottom: 16px;
+}
+
+.activity-feed-header button,
+.activity-feed-error button {
+  padding: 10px 18px;
+  border: none;
+  border-radius: 8px;
+  background: #2563eb;
+  color: white;
+  cursor: pointer;
+}
+
+.activity-feed-header button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.activity-feed-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.activity-card {
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  background: #fff;
+  color: #222;
+}
+
+.activity-card-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.activity-card-header time {
+  color: #777;
+  font-size: 0.85rem;
+}
+
+.activity-media-type {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: #e5e7eb;
+  font-size: 0.8rem;
+}
+
+.activity-feed-empty,
+.activity-feed-error {
+  padding: 32px;
+  text-align: center;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+}
+
+.activity-feed-error {
+  color: #b91c1c;
+}
+
+
+/* Activity Privacy Controls */
+
+.activity-privacy-panel {
+  padding: 20px;
+  margin-bottom: 24px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  background: #f9fafb;
+  color: #222;
+}
+
+.activity-privacy-panel h2 {
+  margin-top: 0;
+  margin-bottom: 8px;
+  font-size: 1.2rem;
+}
+
+.activity-privacy-panel p {
+  margin-bottom: 14px;
+  color: #555;
+}
+
+.activity-privacy-toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.activity-privacy-toggle input {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.activity-privacy-success {
+  color: #15803d !important;
+  margin-top: 12px;
+}
+
+.activity-privacy-error {
+  color: #b91c1c;
+  margin-top: 12px;
+}
+
+.activity-privacy-error button {
+  margin-top: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
