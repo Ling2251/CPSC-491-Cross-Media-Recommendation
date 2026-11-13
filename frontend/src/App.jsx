@@ -9,6 +9,7 @@ import Login from "./pages/Login";
 import Onboarding from "./pages/Onboarding";
 import Signup from "./pages/Signup";
 import FriendSuggestionsPage from "./pages/FriendSuggestionsPage";
+import AiRecommendationsPage from "./pages/AiRecommendations/AiRecommendationsPage";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -70,6 +71,11 @@ function App() {
       <Route
         path="/suggestions"
         element={<FriendSuggestionsPage />}
+      />
+
+      <Route
+        path="/ai-recommendations"
+        element={<AiRecommendationsPage />}
       />
 
       <Route

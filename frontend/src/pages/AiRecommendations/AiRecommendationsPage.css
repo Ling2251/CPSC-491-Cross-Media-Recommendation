@@ -1,0 +1,50 @@
+.ai-page {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.ai-preferences {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.ai-preferences fieldset {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  border: 1px solid #d0d0d0;
+  border-radius: 6px;
+  padding: 12px;
+}
+
+.ai-preferences label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ai-note {
+  width: 100%;
+  margin: 0;
+  font-size: 0.9em;
+  color: #555;
+}
+
+.ai-message {
+  font-weight: 600;
+}
+
+.ai-results {
+  padding-left: 20px;
+}
+
+.ai-results li {
+  margin-bottom: 12px;
+}
+
+.ai-score {
+  margin-left: 12px;
+  color: #555;
+}
