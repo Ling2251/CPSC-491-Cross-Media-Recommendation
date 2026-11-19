@@ -1,8 +1,14 @@
 
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import "./Dashboard.css";
 
 const features = [
+  {
+    title: "Discover",
+    description: "Explore books, movies, music, and more.",
+    path: "/discover",
+    icon: "✨",
+  },
   {
     title: "Friends",
     description: "Manage friends and friend requests.",
@@ -29,14 +35,7 @@ const features = [
   },
 ];
 
-export default function Dashboard({ user, onLogout }) {
-  const navigate = useNavigate();
-
-  function handleLogout() {
-    onLogout?.();
-    navigate("/");
-  }
-
+export default function Dashboard({ user }) {
   return (
     <main className="dashboard-page">
       <header className="dashboard-header">
@@ -44,14 +43,6 @@ export default function Dashboard({ user, onLogout }) {
           <h1>Cross Media Recommendations</h1>
           <p>Your personal media hub</p>
         </div>
-
-        <button
-          type="button"
-          className="dashboard-logout"
-          onClick={handleLogout}
-        >
-          Log Out
-        </button>
       </header>
 
       <section className="dashboard-welcome">

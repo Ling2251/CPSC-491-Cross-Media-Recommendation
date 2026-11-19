@@ -93,6 +93,29 @@ describe("PostgreSQL Friendship Service", () => {
     assert.equal(pool.query.mock.calls.length, 0);
   });
 
+  it("rejects invalid IDs before querying the database", async () => {
+    const invalidCalls = [
+      () => friendshipService.getFriends("1"),
+      () => friendshipService.getIncomingRequests(0),
+      () => friendshipService.getOutgoingRequests(-1),
+      () => friendshipService.sendRequest(true, 2),
+      () => friendshipService.sendRequest(1, 2147483648),
+      () => friendshipService.acceptRequest(1.5, 2),
+      () => friendshipService.declineRequest(1, null),
+      () => friendshipService.cancelRequest("1", 2),
+      () => friendshipService.removeFriend(1, 0),
+    ];
+
+    for (const invalidCall of invalidCalls) {
+      await assert.rejects(
+        invalidCall(),
+        { code: "INVALID_ID" }
+      );
+    }
+
+    assert.equal(pool.query.mock.calls.length, 0);
+  });
+
   it("rejects duplicate requests", async () => {
     pool.query.mock.mockImplementation(async () => ({
       rows: [],

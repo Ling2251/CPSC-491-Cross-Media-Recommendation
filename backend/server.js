@@ -15,9 +15,9 @@ const activityFeedRoutes = require("./routes/activityFeedRoutes");
 const activityPrivacyRoutes = require("./routes/activityPrivacyRoutes");
 const mediaForumRoutes = require("./routes/mediaForumRoutes");
 
-const app = express();
-const PORT = 3001;
-const JWT_SECRET = process.env.JWT_SECRET;
+const app = express()
+const PORT = 3001
+const JWT_SECRET = process.env.JWT_SECRET
 
 // ==========================================
 // ENVIRONMENT VALIDATION
@@ -76,19 +76,19 @@ function authenticateToken(req, res, next) {
 
   if (!token) {
     return res.status(401).json({
-      message: "Authentication required",
+      message: "Authentication required"
     });
   }
 
   try {
     req.user = jwt.verify(token, JWT_SECRET, {
-      algorithms: ["HS256"],
+      algorithms: ["HS256"]
     });
 
     return next();
   } catch {
     return res.status(401).json({
-      message: "Invalid or expired token",
+      message: "Invalid or expired token"
     });
   }
 }
@@ -107,6 +107,23 @@ app.get("/api/test", (req, res) => {
 // ACCOUNT REGISTRATION
 // POST /api/auth/signup
 // ==========================================
+
+//Tests database readings
+app.get("/api/users", async (req, res) => {
+  try {
+    const result = await pool.query(
+      "SELECT id, name, email, account_state, created_at FROM users"
+    )
+
+    res.json(result.rows)
+  } catch (error) {
+    console.error(error)
+
+    res.status(500).json({
+      message: "Could not retrieve users"
+    })
+  }
+})
 
 app.post("/api/auth/signup", async (req, res) => {
   try {

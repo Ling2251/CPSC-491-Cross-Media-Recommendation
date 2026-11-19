@@ -1,21 +1,27 @@
 # Python environments
 .venv/
 .venv-cc92/
-venv/
 __pycache__/
-.pytest_cache/
-*.py[cod]
 *.pyc
 
-# Environment files
+# Environment secrets
 .env
 .env.*
 !.env.example
 
+# macOS files
+.DS_Store
 # Node dependencies and build output
 node_modules/
 dist/
-build/
 
-# macOS / system files
+# Python environments, caches, and generated files
+.venv/
+venv/
+__pycache__/
+.pytest_cache/
+*.py[cod]
+
+# Local configuration and operating-system files
+.env
 .DS_Store

@@ -1,6 +1,5 @@
-
 import { useEffect, useState } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 
 import LandingPage from "./pages/Landing/LandingPage.jsx";
 import Dashboard from "./pages/Dashboard";
@@ -11,11 +10,18 @@ import Signup from "./pages/Signup";
 import FriendSuggestionsPage from "./pages/FriendSuggestionsPage";
 import ActivityFeedPage from "./pages/ActivityFeed/ActivityFeedPage";
 import MediaForumPage from "./pages/MediaForum/MediaForumPage";
+import DiscoverPage from "./pages/DiscoverPage";
+import AppHeader from "./components/AppHeader";
+import {
+  clearAuthSession,
+  readAuthToken,
+} from "./services/authSession";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_URL || "http://localhost:3001";
 
 function App() {
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [checkingSession, setCheckingSession] = useState(true);
 
@@ -23,7 +29,7 @@ function App() {
     let cancelled = false;
 
     async function restoreSession() {
-      const token = localStorage.getItem("token");
+      const token = readAuthToken();
 
       if (!token) {
         setCheckingSession(false);
@@ -41,7 +47,7 @@ function App() {
         );
 
         if (response.status === 401) {
-          localStorage.removeItem("token");
+          clearAuthSession();
           return;
         }
 
@@ -78,12 +84,14 @@ function App() {
   function handleLogin(loggedInUser) {
     setUser(loggedInUser);
     setCheckingSession(false);
+    navigate("/dashboard", { replace: true });
   }
 
   function handleLogout() {
-    localStorage.removeItem("token");
+    clearAuthSession();
     setUser(null);
     setCheckingSession(false);
+    navigate("/", { replace: true });
   }
 
   const accountState = user?.account_state?.toUpperCase();
@@ -105,63 +113,71 @@ function App() {
     }
 
     if (accountState === "ACTIVE") {
-      return (
-        <Dashboard
-          user={user}
-          onLogout={handleLogout}
-        />
-      );
+      return <Dashboard user={user} />;
     }
 
     return <p>Unknown account state.</p>;
   }
 
   return (
-    <Routes>
-      <Route
-        path="/"
-        element={<LandingPage onLogin={handleLogin} />}
-      />
+    <>
+      {user && !checkingSession && (
+        <AppHeader onLogout={handleLogout} />
+      )}
+      <Routes>
+        <Route
+          path="/"
+          element={<LandingPage onLogin={handleLogin} />}
+        />
 
-      <Route path="/login" element={renderDashboard()} />
+        <Route
+          path="/login"
+          element={<LandingPage onLogin={handleLogin} />}
+        />
 
-      <Route
-        path="/dashboard"
-        element={renderDashboard()}
-      />
+        <Route
+          path="/dashboard"
+          element={renderDashboard()}
+        />
 
-      <Route
-        path="/friends"
-        element={<FriendsPageApi />}
-      />
+        <Route
+          path="/friends"
+          element={<FriendsPageApi />}
+        />
 
-      <Route
-        path="/manage-friends"
-        element={<FriendsPageApi />}
-      />
+        <Route
+          path="/manage-friends"
+          element={<Navigate to="/friends" replace />}
+        />
 
-      <Route
-        path="/suggestions"
-        element={<FriendSuggestionsPage />}
-      />
+        <Route
+          path="/suggestions"
+          element={<FriendSuggestionsPage />}
+        />
 
-      <Route path="/signup" element={<Signup />} />
+        <Route
+          path="/discover"
+          element={<DiscoverPage isAuthenticated={Boolean(user)} />}
+        />
 
-      <Route
-        path="/activity-feed"
-        element={<ActivityFeedPage />}
-      />
+        <Route path="/signup" element={<Signup />} />
 
-      <Route
-        path="/media-forum/:mediaId"
-        element={<MediaForumPage />}
-      />
+        <Route
+          path="/activity-feed"
+          element={<ActivityFeedPage />}
+        />
 
-      <Route
-        path="*"
-        element={<Navigate to="/" replace />}
-      />
-    </Routes>
+        <Route
+          path="/media-forum/:mediaId"
+          element={<MediaForumPage />}
+        />
+
+        <Route
+          path="*"
+          element={<Navigate to="/" replace />}
+        />
+      </Routes>
+    </>
   );
 }
 

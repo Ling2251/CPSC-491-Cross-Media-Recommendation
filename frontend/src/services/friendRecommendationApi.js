@@ -1,8 +1,10 @@
+import { readAuthToken } from "./authSession";
+
 const API_BASE_URL =
   import.meta.env.VITE_RECOMMENDATION_API_URL || "http://localhost:8000";
 
 async function apiRequest(path) {
-  const token = localStorage.getItem("token");
+  const token = readAuthToken();
 
   const response = await fetch(`${API_BASE_URL}${path}`, {
     method: path.endsWith("/demo") ? "GET" : "POST",
@@ -36,7 +38,7 @@ async function apiRequest(path) {
 
 export const friendRecommendationApi = {
   getRecommendations() {
-    const endpoint = localStorage.getItem("token")
+    const endpoint = readAuthToken()
       ? "/api/friend-recommendations/recalculate"
       : "/api/friend-recommendations/demo";
     return apiRequest(endpoint);

@@ -45,13 +45,10 @@ vi.mock("./pages/Landing/LandingPage.jsx", () => ({
 }));
 
 vi.mock("./pages/Dashboard", () => ({
-  default: ({ user, onLogout }) => (
+  default: ({ user }) => (
     <div>
       <h1>Dashboard</h1>
       <p>Welcome {user.name}</p>
-      <button onClick={onLogout}>
-        Log Out
-      </button>
     </div>
   ),
 }));
@@ -303,8 +300,9 @@ describe("App Authentication and Session Restoration", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText("Login Page")
+        screen.getByText("Landing Page")
       ).toBeInTheDocument();
+      expect(screen.getByTestId("location")).toHaveTextContent("/");
     });
 
     expect(
@@ -317,6 +315,14 @@ describe("App Authentication and Session Restoration", () => {
 
     expect(
       screen.getByText("Landing Page")
+    ).toBeInTheDocument();
+  });
+
+  it("renders the landing page on /login as well", async () => {
+    renderApp("/login");
+
+    expect(
+      await screen.findByText("Landing Page")
     ).toBeInTheDocument();
   });
 
@@ -334,6 +340,82 @@ describe("App Authentication and Session Restoration", () => {
     expect(
       screen.getByText("Media Forum")
     ).toBeInTheDocument();
+  });
+
+  it("renders the Discover route", async () => {
+    renderApp("/discover");
+
+    expect(
+      screen.getByRole("heading", { name: /Find your next obsession/i })
+    ).toBeInTheDocument();
+  });
+
+  it("shows a dashboard link on authenticated routes and navigates to it", async () => {
+    localStorage.setItem("token", "valid-token");
+    fetch.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        success: true,
+        user: mockUser,
+      }),
+    });
+
+    renderApp("/activity-feed");
+
+    expect(await screen.findByText("Activity Feed")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("link", { name: "Dashboard" }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("location")).toHaveTextContent("/dashboard");
+    });
+    expect(screen.getByText("Welcome Demo User A")).toBeInTheDocument();
+  });
+
+  it("redirects the old manage-friends URL to Friends with navigation intact", async () => {
+    localStorage.setItem("token", "valid-token");
+    fetch.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        success: true,
+        user: mockUser,
+      }),
+    });
+
+    renderApp("/manage-friends");
+
+    expect(await screen.findByText("Friends Page")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByTestId("location")).toHaveTextContent("/friends");
+    });
+    expect(
+      screen.getByRole("navigation", { name: "Main navigation" })
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Dashboard" })).toHaveAttribute(
+      "href",
+      "/dashboard"
+    );
+  });
+
+  it("does not show authenticated navigation to signed-out visitors", async () => {
+    renderApp("/discover");
+
+    expect(
+      screen.queryByRole("navigation", { name: "Main navigation" })
+    ).not.toBeInTheDocument();
+  });
+
+  it("sends a user who logs in from /login to the dashboard", async () => {
+    renderApp("/login");
+
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Simulate Login" })
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("location")).toHaveTextContent("/dashboard");
+    });
   });
 
   it("redirects unknown routes to the homepage", async () => {
