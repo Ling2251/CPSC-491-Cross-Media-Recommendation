@@ -2,117 +2,170 @@ import { useEffect, useState } from "react";
 import { Link, Routes, Route } from "react-router-dom";
 import AppHeader from "./components/AppHeader";
 
+import { useEffect, useState } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+
+import LandingPage from "./pages/Landing/LandingPage.jsx";
 import Dashboard from "./pages/Dashboard";
-import FriendsPage from "./pages/Friends/FriendsPage";
+import FriendsPageApi from "./pages/Friends/FriendsPageApi";
 import Login from "./pages/Login";
 import Onboarding from "./pages/Onboarding";
 import Signup from "./pages/Signup";
 import FriendSuggestionsPage from "./pages/FriendSuggestionsPage";
-import DiscoverPage from "./pages/DiscoverPage";
-import {
-  clearAuthSession,
-  readAuthToken,
-} from "./services/authSession";
+import ActivityFeedPage from "./pages/ActivityFeed/ActivityFeedPage";
+import MediaForumPage from "./pages/MediaForum/MediaForumPage";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:3001";
 
 function App() {
   const [user, setUser] = useState(null);
-  const [sessionChecked, setSessionChecked] = useState(
-    () => !readAuthToken()
-  );
-  const [sessionError, setSessionError] = useState("");
+  const [checkingSession, setCheckingSession] = useState(true);
 
   useEffect(() => {
-    const token = readAuthToken();
-    if (!token) return undefined;
-
-    let active = true;
+    let cancelled = false;
 
     async function restoreSession() {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        setCheckingSession(false);
+        return;
+      }
+
       try {
-        const response = await fetch(`${API_BASE_URL}/api/profile`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await fetch(
+          `${API_BASE_URL}/api/auth/me`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (response.status === 401) {
+          localStorage.removeItem("token");
+          return;
+        }
 
         if (!response.ok) {
-          if (response.status === 401 || response.status === 404) {
-            clearAuthSession();
-            return;
-          }
-
-          throw new Error("Could not verify your saved sign-in.");
+          throw new Error("Session verification failed");
         }
 
         const data = await response.json();
-        if (!data.user?.id || !data.user.account_state) {
-          throw new Error("The profile response is missing account information.");
+
+        if (!data.user) {
+          throw new Error("Missing user information");
         }
 
-        if (active) setUser(data.user);
+        if (!cancelled) {
+          setUser(data.user);
+        }
       } catch (error) {
-        if (active) setSessionError(error.message);
+        console.error("Session restoration error:", error);
+        // Preserve the token on temporary network failures.
       } finally {
-        if (active) setSessionChecked(true);
+        if (!cancelled) {
+          setCheckingSession(false);
+        }
       }
     }
 
     restoreSession();
+
     return () => {
-      active = false;
+      cancelled = true;
     };
   }, []);
 
   function handleLogin(loggedInUser) {
     setSessionError("");
     setUser(loggedInUser);
+    setCheckingSession(false);
   }
 
   function handleLogout() {
     clearAuthSession();
     setUser(null);
+    setCheckingSession(false);
   }
 
   const accountState = user?.account_state?.toUpperCase();
-  const accountPage = !sessionChecked
-    ? <p role="status">Checking your account...</p>
-    : !user
-      ? <Login onLogin={handleLogin} />
-    : accountState === "ONBOARDING_REQUIRED" || accountState === "CREATED"
-      ? <Onboarding onLogout={handleLogout} />
-      : accountState === "ACTIVE"
-        ? <Dashboard onLogout={handleLogout} />
-        : <p>Unknown account state.</p>;
-  const isAuthenticated = Boolean(user);
+
+  function renderDashboard() {
+    if (checkingSession) {
+      return <p>Restoring your session...</p>;
+    }
+
+    if (!user) {
+      return <Login onLogin={handleLogin} />;
+    }
+
+    if (
+      accountState === "CREATED" ||
+      accountState === "ONBOARDING_REQUIRED"
+    ) {
+      return <Onboarding onLogout={handleLogout} />;
+    }
+
+    if (accountState === "ACTIVE") {
+      return (
+        <Dashboard
+          user={user}
+          onLogout={handleLogout}
+        />
+      );
+    }
+
+    return <p>Unknown account state.</p>;
+  }
 
   return (
-    <>
-      {isAuthenticated && <AppHeader />}
-      {sessionError && (
-        <p className="app-session-error" role="alert">
-          {sessionError} <Link to="/login">Sign in again</Link>
-        </p>
-      )}
-      <Routes>
-        <Route
-          path="/manage-friends"
-          element={<FriendsPage />}
-        />
-        <Route path="/" element={<DiscoverPage isAuthenticated={isAuthenticated} />} />
-        <Route path="/discover" element={<DiscoverPage isAuthenticated={isAuthenticated} />} />
-        <Route path="/login" element={accountPage} />
-        <Route path="/friends" element={<FriendsPage />} />
-        <Route path="/manage-friends" element={<FriendsPage />} />
-        <Route
-          path="/suggestions"
-          element={<FriendSuggestionsPage userId={user?.id} />}
-        />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="*" element={accountPage} />
-      </Routes>
-    </>
+    <Routes>
+      <Route
+        path="/"
+        element={<LandingPage onLogin={handleLogin} />}
+      />
+
+      <Route path="/login" element={renderDashboard()} />
+
+      <Route
+        path="/dashboard"
+        element={renderDashboard()}
+      />
+
+      <Route
+        path="/friends"
+        element={<FriendsPageApi />}
+      />
+
+      <Route
+        path="/manage-friends"
+        element={<FriendsPageApi />}
+      />
+
+      <Route
+        path="/suggestions"
+        element={<FriendSuggestionsPage />}
+      />
+
+      <Route path="/signup" element={<Signup />} />
+
+      <Route
+        path="/activity-feed"
+        element={<ActivityFeedPage />}
+      />
+
+      <Route
+        path="/media-forum/:mediaId"
+        element={<MediaForumPage />}
+      />
+
+      <Route
+        path="*"
+        element={<Navigate to="/" replace />}
+      />
+    </Routes>
   );
 }
 
