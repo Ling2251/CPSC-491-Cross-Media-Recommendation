@@ -14,6 +14,8 @@ import {
   fireEvent,
 } from "@testing-library/react";
 
+import { MemoryRouter } from "react-router-dom";
+
 import ActivityFeedPage from "./ActivityFeedPage";
 
 import {
@@ -69,6 +71,16 @@ const mockActivities = [
   },
 ];
 
+// Render with React Router context.
+// Required because ActivityFeedPage now uses <Link>.
+function renderActivityFeed() {
+  return render(
+    <MemoryRouter initialEntries={["/activity-feed"]}>
+      <ActivityFeedPage />
+    </MemoryRouter>
+  );
+}
+
 describe("ActivityFeedPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -90,12 +102,12 @@ describe("ActivityFeedPage", () => {
     );
   });
 
-  // =====================================================
+  // ==========================================
   // ACTIVITY FEED TESTS
-  // =====================================================
+  // ==========================================
 
   it("renders the Activity Feed heading", async () => {
-    render(<ActivityFeedPage />);
+    renderActivityFeed();
 
     expect(
       screen.getByRole("heading", {
@@ -114,7 +126,7 @@ describe("ActivityFeedPage", () => {
       mockActivities
     );
 
-    render(<ActivityFeedPage />);
+    renderActivityFeed();
 
     expect(
       await screen.findAllByText("Demo User B")
@@ -129,7 +141,7 @@ describe("ActivityFeedPage", () => {
       mockActivities[0],
     ]);
 
-    render(<ActivityFeedPage />);
+    renderActivityFeed();
 
     expect(
       await screen.findByText(
@@ -147,7 +159,7 @@ describe("ActivityFeedPage", () => {
       mockActivities[1],
     ]);
 
-    render(<ActivityFeedPage />);
+    renderActivityFeed();
 
     expect(
       await screen.findByText("Test TV Show")
@@ -163,7 +175,7 @@ describe("ActivityFeedPage", () => {
       mockActivities[2],
     ]);
 
-    render(<ActivityFeedPage />);
+    renderActivityFeed();
 
     expect(
       await screen.findByText("Test Book")
@@ -175,7 +187,7 @@ describe("ActivityFeedPage", () => {
   });
 
   it("displays an empty state", async () => {
-    render(<ActivityFeedPage />);
+    renderActivityFeed();
 
     expect(
       await screen.findByRole("heading", {
@@ -191,7 +203,7 @@ describe("ActivityFeedPage", () => {
       )
     );
 
-    render(<ActivityFeedPage />);
+    renderActivityFeed();
 
     expect(
       await screen.findByText(
@@ -211,7 +223,7 @@ describe("ActivityFeedPage", () => {
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([mockActivities[0]]);
 
-    render(<ActivityFeedPage />);
+    renderActivityFeed();
 
     expect(
       await screen.findByText(/no activities yet/i)
@@ -240,7 +252,7 @@ describe("ActivityFeedPage", () => {
       )
       .mockResolvedValueOnce([mockActivities[0]]);
 
-    render(<ActivityFeedPage />);
+    renderActivityFeed();
 
     expect(
       await screen.findByText("Network error")
@@ -272,7 +284,7 @@ describe("ActivityFeedPage", () => {
         })
     );
 
-    render(<ActivityFeedPage />);
+    renderActivityFeed();
 
     expect(
       screen.getByText(
@@ -298,7 +310,7 @@ describe("ActivityFeedPage", () => {
       mockActivities
     );
 
-    render(<ActivityFeedPage />);
+    renderActivityFeed();
 
     expect(
       await screen.findByText("Test Book")
@@ -317,12 +329,12 @@ describe("ActivityFeedPage", () => {
     ).toBeInTheDocument();
   });
 
-  // =====================================================
+  // ==========================================
   // ACTIVITY PRIVACY TESTS
-  // =====================================================
+  // ==========================================
 
   it("loads the user's privacy settings", async () => {
-    render(<ActivityFeedPage />);
+    renderActivityFeed();
 
     await waitFor(() => {
       expect(getActivityPrivacy)
@@ -343,7 +355,7 @@ describe("ActivityFeedPage", () => {
       activityPublic: true,
     });
 
-    render(<ActivityFeedPage />);
+    renderActivityFeed();
 
     const checkbox = await screen.findByLabelText(
       /share my activity with friends/i
@@ -353,7 +365,7 @@ describe("ActivityFeedPage", () => {
   });
 
   it("enables activity sharing", async () => {
-    render(<ActivityFeedPage />);
+    renderActivityFeed();
 
     const checkbox = await screen.findByLabelText(
       /share my activity with friends/i
@@ -386,7 +398,7 @@ describe("ActivityFeedPage", () => {
       activityPublic: true,
     });
 
-    render(<ActivityFeedPage />);
+    renderActivityFeed();
 
     const checkbox = await screen.findByLabelText(
       /share my activity with friends/i
@@ -411,7 +423,7 @@ describe("ActivityFeedPage", () => {
       new Error("Failed to update privacy settings.")
     );
 
-    render(<ActivityFeedPage />);
+    renderActivityFeed();
 
     const checkbox = await screen.findByLabelText(
       /share my activity with friends/i

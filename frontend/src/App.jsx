@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 
 import LandingPage from "./pages/Landing/LandingPage.jsx";
@@ -12,21 +12,87 @@ import FriendSuggestionsPage from "./pages/FriendSuggestionsPage";
 import ActivityFeedPage from "./pages/ActivityFeed/ActivityFeedPage";
 import MediaForumPage from "./pages/MediaForum/MediaForumPage";
 
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:3001";
+
 function App() {
   const [user, setUser] = useState(null);
+  const [checkingSession, setCheckingSession] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function restoreSession() {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        setCheckingSession(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `${API_BASE_URL}/api/auth/me`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (response.status === 401) {
+          localStorage.removeItem("token");
+          return;
+        }
+
+        if (!response.ok) {
+          throw new Error("Session verification failed");
+        }
+
+        const data = await response.json();
+
+        if (!data.user) {
+          throw new Error("Missing user information");
+        }
+
+        if (!cancelled) {
+          setUser(data.user);
+        }
+      } catch (error) {
+        console.error("Session restoration error:", error);
+        // Preserve the token on temporary network failures.
+      } finally {
+        if (!cancelled) {
+          setCheckingSession(false);
+        }
+      }
+    }
+
+    restoreSession();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   function handleLogin(loggedInUser) {
     setUser(loggedInUser);
+    setCheckingSession(false);
   }
 
   function handleLogout() {
     localStorage.removeItem("token");
     setUser(null);
+    setCheckingSession(false);
   }
 
   const accountState = user?.account_state?.toUpperCase();
 
   function renderDashboard() {
+    if (checkingSession) {
+      return <p>Restoring your session...</p>;
+    }
+
     if (!user) {
       return <Login onLogin={handleLogin} />;
     }
@@ -39,7 +105,12 @@ function App() {
     }
 
     if (accountState === "ACTIVE") {
-      return <Dashboard onLogout={handleLogout} />;
+      return (
+        <Dashboard
+          user={user}
+          onLogout={handleLogout}
+        />
+      );
     }
 
     return <p>Unknown account state.</p>;
@@ -47,12 +118,12 @@ function App() {
 
   return (
     <Routes>
-      <Route path="/" element={<LandingPage />} />
-
       <Route
-        path="/login"
-        element={renderDashboard()}
+        path="/"
+        element={<LandingPage onLogin={handleLogin} />}
       />
+
+      <Route path="/login" element={renderDashboard()} />
 
       <Route
         path="/dashboard"
@@ -74,15 +145,7 @@ function App() {
         element={<FriendSuggestionsPage />}
       />
 
-      <Route
-        path="/signup"
-        element={<Signup />}
-      />
-
-      <Route
-        path="*"
-        element={<Navigate to="/" replace />}
-      />
+      <Route path="/signup" element={<Signup />} />
 
       <Route
         path="/activity-feed"
@@ -92,6 +155,11 @@ function App() {
       <Route
         path="/media-forum/:mediaId"
         element={<MediaForumPage />}
+      />
+
+      <Route
+        path="*"
+        element={<Navigate to="/" replace />}
       />
     </Routes>
   );

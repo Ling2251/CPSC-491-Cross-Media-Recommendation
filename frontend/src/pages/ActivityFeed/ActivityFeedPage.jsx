@@ -1,5 +1,7 @@
 
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+
 import { getFriendsActivityFeed } from "../../services/activityFeedApi";
 import {
   getActivityPrivacy,
@@ -87,6 +89,10 @@ function ActivityFeedPage() {
 
   return (
     <main className="activity-feed-page">
+      <Link to="/dashboard" className="back-dashboard-link">
+        ← Back to Dashboard
+      </Link>
+
       <div className="activity-feed-header">
         <h1>Friends Activity Feed</h1>
         <p>
@@ -124,18 +130,29 @@ function ActivityFeedPage() {
           </label>
         )}
 
-        {privacySaving && <p>Saving privacy settings...</p>}
+        {privacySaving && (
+          <p>Saving privacy settings...</p>
+        )}
 
         {privacyMessage && (
-          <p role="status" className="activity-privacy-success">
+          <p
+            role="status"
+            className="activity-privacy-success"
+          >
             {privacyMessage}
           </p>
         )}
 
         {privacyError && (
-          <div role="alert" className="activity-privacy-error">
+          <div
+            role="alert"
+            className="activity-privacy-error"
+          >
             <p>{privacyError}</p>
-            <button type="button" onClick={loadPrivacy}>
+            <button
+              type="button"
+              onClick={loadPrivacy}
+            >
               Retry Privacy Settings
             </button>
           </div>
@@ -143,7 +160,9 @@ function ActivityFeedPage() {
       </section>
 
       {loading && (
-        <p role="status">Loading your friends' activities...</p>
+        <p role="status">
+          Loading your friends' activities...
+        </p>
       )}
 
       {!loading && error && (
@@ -168,7 +187,10 @@ function ActivityFeedPage() {
       {!loading && !error && activities.length > 0 && (
         <div className="activity-feed-list">
           {activities.map((activity) => (
-            <article className="activity-card" key={activity.id}>
+            <article
+              className="activity-card"
+              key={activity.id}
+            >
               <div className="activity-card-header">
                 <strong>{activity.user_name}</strong>
                 <time dateTime={activity.created_at}>

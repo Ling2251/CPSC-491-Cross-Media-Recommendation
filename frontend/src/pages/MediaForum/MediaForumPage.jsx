@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 
 import {
   getMediaPosts,
@@ -32,7 +32,6 @@ function getCurrentUserId() {
 
 function MediaForumPage() {
   const { mediaId } = useParams();
-
   const currentUserId = getCurrentUserId();
 
   const [posts, setPosts] = useState([]);
@@ -180,6 +179,10 @@ function MediaForumPage() {
 
   return (
     <main className="media-forum-page">
+      <Link to="/dashboard" className="back-dashboard-link">
+        ← Back to Dashboard
+      </Link>
+
       <header className="media-forum-header">
         <h1>Media Discussion Forum</h1>
         <p>Discuss media item #{mediaId} with other users.</p>
