@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import Login from "./Login";
 
@@ -24,7 +25,11 @@ describe("Login", () => {
       })
     );
 
-    render(<Login onLogin={onLogin} />);
+    render(
+      <MemoryRouter>
+        <Login onLogin={onLogin} />
+      </MemoryRouter>
+    );
     fireEvent.change(screen.getByLabelText("Email"), {
       target: { value: "user@example.com" },
     });
@@ -55,7 +60,11 @@ describe("Login", () => {
       })
     );
 
-    render(<Login onLogin={vi.fn()} />);
+    render(
+      <MemoryRouter>
+        <Login onLogin={vi.fn()} />
+      </MemoryRouter>
+    );
     fireEvent.change(screen.getByLabelText("Email"), {
       target: { value: "user@example.com" },
     });

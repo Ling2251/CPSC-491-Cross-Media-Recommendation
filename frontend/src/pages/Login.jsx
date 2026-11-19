@@ -1,11 +1,17 @@
 import { useState } from "react"
+import { useLocation } from "react-router-dom"
 import { persistAuthToken } from "../services/authSession"
 
 function Login({ onLogin }) {
-  const [email, setEmail] = useState("")
+  const location = useLocation()
+  const [email, setEmail] = useState(location.state?.email || "")
   const [password, setPassword] = useState("")
   const [stayLoggedIn, setStayLoggedIn] = useState(false)
-  const [message, setMessage] = useState("")
+  const [message, setMessage] = useState(
+    location.state?.signupSuccess
+      ? "Your account is ready. Log in to continue."
+      : ""
+  )
 
   async function handleSubmit(event) {
     event.preventDefault()

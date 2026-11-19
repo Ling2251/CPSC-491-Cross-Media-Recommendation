@@ -1,6 +1,7 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { persistAuthToken } from "../../services/authSession";
 import "./LandingPage.css";
 
 const API_BASE_URL =
@@ -9,13 +10,9 @@ const API_BASE_URL =
 export default function LandingPage({ onLogin }) {
   const navigate = useNavigate();
 
-  const [activeTab, setActiveTab] = useState("login");
-
   const [form, setForm] = useState({
     username: "",
-    email: "",
     password: "",
-    confirmPassword: "",
   });
 
   const [message, setMessage] = useState("");
@@ -30,50 +27,9 @@ export default function LandingPage({ onLogin }) {
     }));
   };
 
-  const switchTab = (tab) => {
-    setActiveTab(tab);
-    setMessage("");
-  };
-
   const handleSubmit = async (event) => {
     event.preventDefault();
     setMessage("");
-
-    // ==========================================
-    // REGISTRATION - EXISTING PLACEHOLDER
-    // ==========================================
-
-    if (activeTab === "register") {
-      if (!form.username.trim() || !form.email.trim()) {
-        setMessage("Please complete all required fields.");
-        return;
-      }
-
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
-        setMessage("Please enter a valid email address.");
-        return;
-      }
-
-      if (form.password.length < 8) {
-        setMessage("Password must be at least 8 characters.");
-        return;
-      }
-
-      if (form.password !== form.confirmPassword) {
-        setMessage("Passwords do not match.");
-        return;
-      }
-
-      setMessage(
-        "Registration form validated. Account creation is not connected yet."
-      );
-
-      return;
-    }
-
-    // ==========================================
-    // LOGIN VALIDATION
-    // ==========================================
 
     const email = form.username.trim();
 
@@ -122,8 +78,7 @@ export default function LandingPage({ onLogin }) {
         return;
       }
 
-      // Store JWT for authenticated API requests.
-      localStorage.setItem("token", data.token);
+      persistAuthToken(data.token, true);
 
       // Update App.jsx authentication state.
       onLogin(data.user);
@@ -167,6 +122,9 @@ export default function LandingPage({ onLogin }) {
               <li>Community forums and friend activity</li>
               <li>Build and share personal libraries</li>
             </ul>
+            <Link className="auth-explore-link" to="/discover">
+              Explore as a guest <span aria-hidden="true">→</span>
+            </Link>
           </div>
         </section>
 
@@ -176,84 +134,33 @@ export default function LandingPage({ onLogin }) {
             <div className="auth-tabs">
               <button
                 type="button"
-                className={
-                  activeTab === "login" ? "active" : ""
-                }
-                onClick={() => switchTab("login")}
+                className="active"
                 disabled={loading}
               >
                 Log In
               </button>
-
-              <button
-                type="button"
-                className={
-                  activeTab === "register" ? "active" : ""
-                }
-                onClick={() => switchTab("register")}
-                disabled={loading}
-              >
+              <Link className="auth-tab-link" to="/signup">
                 Create Account
-              </button>
+              </Link>
             </div>
 
             <form onSubmit={handleSubmit}>
-              {activeTab === "register" && (
-                <>
-                  <div className="auth-field">
-                    <label htmlFor="register-username">
-                      USERNAME
-                    </label>
+              <div className="auth-field">
+                <label htmlFor="login-username">
+                  EMAIL
+                </label>
 
-                    <input
-                      id="register-username"
-                      name="username"
-                      type="text"
-                      autoComplete="username"
-                      placeholder="Choose a username..."
-                      value={form.username}
-                      onChange={updateForm}
-                      required
-                    />
-                  </div>
-
-                  <div className="auth-field">
-                    <label htmlFor="register-email">
-                      EMAIL
-                    </label>
-
-                    <input
-                      id="register-email"
-                      name="email"
-                      type="email"
-                      autoComplete="email"
-                      placeholder="Email address..."
-                      value={form.email}
-                      onChange={updateForm}
-                      required
-                    />
-                  </div>
-                </>
-              )}
-
-              {activeTab === "login" && (
-                <div className="auth-field">
-                  <label htmlFor="login-username">
-                    EMAIL
-                  </label>
-
-                  <input
-                    id="login-username"
-                    name="username"
-                    type="email"
-                    autoComplete="email"
-                    placeholder="Email address..."
-                    value={form.username}
-                    onChange={updateForm}
-                    required
-                  />
-                </div>
-              )}
+                <input
+                  id="login-username"
+                  name="username"
+                  type="email"
+                  autoComplete="email"
+                  placeholder="Email address..."
+                  value={form.username}
+                  onChange={updateForm}
+                  required
+                />
+              </div>
 
               <div className="auth-field">
                 <label htmlFor="auth-password">
@@ -264,11 +171,7 @@ export default function LandingPage({ onLogin }) {
                   id="auth-password"
                   name="password"
                   type="password"
-                  autoComplete={
-                    activeTab === "login"
-                      ? "current-password"
-                      : "new-password"
-                  }
+                  autoComplete="current-password"
                   placeholder="Password..."
                   value={form.password}
                   onChange={updateForm}
@@ -276,43 +179,12 @@ export default function LandingPage({ onLogin }) {
                 />
               </div>
 
-              {activeTab === "register" && (
-                <div className="auth-field">
-                  <label htmlFor="confirm-password">
-                    CONFIRM PASSWORD
-                  </label>
-
-                  <input
-                    id="confirm-password"
-                    name="confirmPassword"
-                    type="password"
-                    autoComplete="new-password"
-                    placeholder="Confirm password..."
-                    value={form.confirmPassword}
-                    onChange={updateForm}
-                    required
-                  />
-                </div>
-              )}
-
-              {activeTab === "login" && (
-                <div className="auth-forgot">
-                  <span>
-                    Forgot password? Contact support.
-                  </span>
-                </div>
-              )}
-
               <button
                 className="auth-submit"
                 type="submit"
                 disabled={loading}
               >
-                {loading
-                  ? "Logging in..."
-                  : activeTab === "login"
-                    ? "Log In"
-                    : "Create Account"}
+                {loading ? "Logging in..." : "Log In"}
               </button>
 
               {message && (
@@ -321,42 +193,6 @@ export default function LandingPage({ onLogin }) {
                 </p>
               )}
             </form>
-
-            <div className="auth-divider">
-              <span>or continue with</span>
-            </div>
-
-            <div className="auth-social-buttons">
-              <button
-                type="button"
-                disabled
-                title="Coming soon"
-              >
-                Google
-              </button>
-
-              <button
-                type="button"
-                disabled
-                title="Coming soon"
-              >
-                Apple
-              </button>
-
-              <button
-                type="button"
-                disabled
-                title="Coming soon"
-              >
-                Facebook
-              </button>
-            </div>
-
-            <p className="auth-legal">
-              By continuing you agree to our{" "}
-              <span>Terms of Service</span> and{" "}
-              <span>Privacy Policy</span>
-            </p>
           </div>
         </section>
       </main>

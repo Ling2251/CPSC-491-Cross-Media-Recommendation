@@ -108,12 +108,28 @@
   font-size: 20px;
 }
 
+.auth-tabs button.active,
+.auth-tabs .auth-tab-link {
+  border-bottom: 3px solid transparent;
+  color: #999999;
+  cursor: pointer;
+  padding: 0 33px 15px;
+  font-size: 20px;
+}
+
 .auth-tabs button.active {
   color: #ffffff;
   border-bottom-color: #ed6227;
 }
 
-.auth-tabs button:hover {
+.auth-tabs .auth-tab-link {
+  display: block;
+  border-bottom-color: transparent;
+  text-decoration: none;
+}
+
+.auth-tabs button:hover,
+.auth-tabs .auth-tab-link:hover {
   color: #ffffff;
 }
 
@@ -179,6 +195,32 @@
 
 .auth-submit:hover {
   background: #fa753f;
+}
+
+.auth-explore-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 32px;
+  padding: 11px 16px;
+  color: #f28a58;
+  border: 1px solid #76503e;
+  border-radius: 24px;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.auth-explore-link:hover {
+  background: #38261f;
+  border-color: #ed6227;
+}
+
+.auth-explore-link:focus-visible,
+.auth-tabs a:focus-visible,
+.auth-tabs button:focus-visible {
+  outline: 2px solid #ffb28e;
+  outline-offset: 3px;
 }
 
 .auth-message {
@@ -290,16 +332,9 @@
     padding: 40px 22px;
   }
 
-  .auth-tabs button {
+  .auth-tabs button,
+  .auth-tabs .auth-tab-link {
     padding: 0 18px 14px;
     font-size: 17px;
-  }
-
-  .auth-social-buttons {
-    gap: 8px;
-  }
-
-  .auth-social-buttons button {
-    font-size: 14px;
   }
 }

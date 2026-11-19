@@ -4,6 +4,12 @@ import "./Dashboard.css";
 
 const features = [
   {
+    title: "Discover",
+    description: "Explore books, movies, music, and more.",
+    path: "/discover",
+    icon: "✨",
+  },
+  {
     title: "Friends",
     description: "Manage friends and friend requests.",
     path: "/friends",

@@ -1,9 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, Routes, Route } from "react-router-dom";
-import AppHeader from "./components/AppHeader";
-
-import { useEffect, useState } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 
 import LandingPage from "./pages/Landing/LandingPage.jsx";
 import Dashboard from "./pages/Dashboard";
@@ -14,11 +10,17 @@ import Signup from "./pages/Signup";
 import FriendSuggestionsPage from "./pages/FriendSuggestionsPage";
 import ActivityFeedPage from "./pages/ActivityFeed/ActivityFeedPage";
 import MediaForumPage from "./pages/MediaForum/MediaForumPage";
+import DiscoverPage from "./pages/DiscoverPage";
+import {
+  clearAuthSession,
+  readAuthToken,
+} from "./services/authSession";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_URL || "http://localhost:3001";
 
 function App() {
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [checkingSession, setCheckingSession] = useState(true);
 
@@ -26,7 +28,7 @@ function App() {
     let cancelled = false;
 
     async function restoreSession() {
-      const token = localStorage.getItem("token");
+      const token = readAuthToken();
 
       if (!token) {
         setCheckingSession(false);
@@ -44,7 +46,7 @@ function App() {
         );
 
         if (response.status === 401) {
-          localStorage.removeItem("token");
+          clearAuthSession();
           return;
         }
 
@@ -79,9 +81,9 @@ function App() {
   }, []);
 
   function handleLogin(loggedInUser) {
-    setSessionError("");
     setUser(loggedInUser);
     setCheckingSession(false);
+    navigate("/dashboard", { replace: true });
   }
 
   function handleLogout() {
@@ -127,7 +129,18 @@ function App() {
         element={<LandingPage onLogin={handleLogin} />}
       />
 
-      <Route path="/login" element={renderDashboard()} />
+      <Route
+        path="/login"
+        element={
+          checkingSession ? (
+            <p>Restoring your session...</p>
+          ) : user ? (
+            <Navigate to="/dashboard" replace />
+          ) : (
+            <Login onLogin={handleLogin} />
+          )
+        }
+      />
 
       <Route
         path="/dashboard"
@@ -147,6 +160,11 @@ function App() {
       <Route
         path="/suggestions"
         element={<FriendSuggestionsPage />}
+      />
+
+      <Route
+        path="/discover"
+        element={<DiscoverPage isAuthenticated={Boolean(user)} />}
       />
 
       <Route path="/signup" element={<Signup />} />

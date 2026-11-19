@@ -336,6 +336,26 @@ describe("App Authentication and Session Restoration", () => {
     ).toBeInTheDocument();
   });
 
+  it("renders the Discover route", async () => {
+    renderApp("/discover");
+
+    expect(
+      screen.getByRole("heading", { name: /Find your next obsession/i })
+    ).toBeInTheDocument();
+  });
+
+  it("sends a user who logs in from /login to the dashboard", async () => {
+    renderApp("/login");
+
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Simulate Login" })
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("location")).toHaveTextContent("/dashboard");
+    });
+  });
+
   it("redirects unknown routes to the homepage", async () => {
     renderApp("/unknown-page");
 
