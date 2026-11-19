@@ -11,6 +11,7 @@ const mediaInteractionRoutes = require("./routes/mediaInteractionRoutes");
 const mediaReviewRoutes = require("./routes/mediaReviewRoutes");
 const activityFeedRoutes = require("./routes/activityFeedRoutes");
 const activityPrivacyRoutes = require("./routes/activityPrivacyRoutes");
+const mediaForumRoutes = require("./routes/mediaForumRoutes");
 
 const app = express()
 const PORT = 3001
@@ -37,6 +38,8 @@ app.use("/api/privacy", activityPrivacyRoutes);
 app.use("/api/feed", activityFeedRoutes);
 
 app.use("/api/reviews", mediaReviewRoutes);
+
+app.use("/api/forums", mediaForumRoutes);
 
 // Middleware to verify JWT authentication
 function authenticateToken(req, res, next) {

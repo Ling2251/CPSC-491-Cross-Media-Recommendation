@@ -10,6 +10,7 @@ import Onboarding from "./pages/Onboarding";
 import Signup from "./pages/Signup";
 import FriendSuggestionsPage from "./pages/FriendSuggestionsPage";
 import ActivityFeedPage from "./pages/ActivityFeed/ActivityFeedPage";
+import MediaForumPage from "./pages/MediaForum/MediaForumPage";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -86,6 +87,11 @@ function App() {
       <Route
         path="/activity-feed"
         element={<ActivityFeedPage />}
+      />
+
+      <Route
+        path="/media-forum/:mediaId"
+        element={<MediaForumPage />}
       />
     </Routes>
   );
