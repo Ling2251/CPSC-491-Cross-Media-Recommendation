@@ -57,10 +57,58 @@ function ActivityFeedPage() {
     }
   }
 
-  useEffect(() => {
-    loadActivities();
-    loadPrivacy();
-  }, []);
+  
+useEffect(() => {
+  let cancelled = false;
+
+  async function initializeFeed() {
+    try {
+      const data = await getFriendsActivityFeed();
+
+      if (!cancelled) {
+        setActivities(data);
+      }
+    } catch (err) {
+      if (!cancelled) {
+        setError(
+          err.message || "Failed to load activity feed."
+        );
+      }
+    } finally {
+      if (!cancelled) {
+        setLoading(false);
+      }
+    }
+  }
+
+  async function initializePrivacy() {
+    try {
+      const data = await getActivityPrivacy();
+
+      if (!cancelled) {
+        setActivityPublic(data.activityPublic);
+      }
+    } catch (err) {
+      if (!cancelled) {
+        setPrivacyError(
+          err.message || "Failed to load privacy settings."
+        );
+      }
+    } finally {
+      if (!cancelled) {
+        setPrivacyLoading(false);
+      }
+    }
+  }
+
+  initializeFeed();
+  initializePrivacy();
+
+  return () => {
+    cancelled = true;
+  };
+}, []);
+
 
   async function handlePrivacyChange(event) {
     const newValue = event.target.checked;

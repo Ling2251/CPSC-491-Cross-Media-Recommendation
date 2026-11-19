@@ -60,9 +60,37 @@ function MediaForumPage() {
     }
   }
 
-  useEffect(() => {
-    loadPosts();
-  }, [mediaId]);
+  
+useEffect(() => {
+  let cancelled = false;
+
+  async function initializePosts() {
+    try {
+      const data = await getMediaPosts(mediaId);
+
+      if (!cancelled) {
+        setPosts(data);
+      }
+    } catch (err) {
+      if (!cancelled) {
+        setError(
+          err.message || "Failed to load discussions."
+        );
+      }
+    } finally {
+      if (!cancelled) {
+        setLoading(false);
+      }
+    }
+  }
+
+  initializePosts();
+
+  return () => {
+    cancelled = true;
+  };
+}, [mediaId]);
+
 
   async function loadReplies(postId) {
     try {
