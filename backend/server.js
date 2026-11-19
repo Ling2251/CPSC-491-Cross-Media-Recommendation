@@ -19,25 +19,46 @@ const app = express();
 const PORT = 3001;
 const JWT_SECRET = process.env.JWT_SECRET;
 
+// ==========================================
+// ENVIRONMENT VALIDATION
+// ==========================================
+
 if (!JWT_SECRET || JWT_SECRET.length < 32) {
   throw new Error(
     "JWT_SECRET must be configured with at least 32 characters."
   );
 }
 
+// ==========================================
+// EXPRESS MIDDLEWARE
+// ==========================================
+
 app.use(cors());
 app.use(express.json());
 
 // ==========================================
-// API ROUTES
+// APPLICATION API ROUTES
 // ==========================================
 
+// Friendship Management
 app.use("/api/friends", friendshipRoutes);
+
+// Activity Tracking
 app.use("/api/activities", activityRoutes);
+
+// Media Interactions
 app.use("/api/media-interactions", mediaInteractionRoutes);
+
+// Activity Privacy
 app.use("/api/privacy", activityPrivacyRoutes);
+
+// Friends Activity Feed
 app.use("/api/feed", activityFeedRoutes);
+
+// Media Reviews
 app.use("/api/reviews", mediaReviewRoutes);
+
+// Media Discussion Forums
 app.use("/api/forums", mediaForumRoutes);
 
 // ==========================================
@@ -47,9 +68,11 @@ app.use("/api/forums", mediaForumRoutes);
 function authenticateToken(req, res, next) {
   const authHeader = req.headers.authorization;
 
-  const token = authHeader?.startsWith("Bearer ")
-    ? authHeader.slice(7)
-    : null;
+  const token =
+    typeof authHeader === "string" &&
+    authHeader.startsWith("Bearer ")
+      ? authHeader.slice(7)
+      : null;
 
   if (!token) {
     return res.status(401).json({
@@ -62,7 +85,7 @@ function authenticateToken(req, res, next) {
       algorithms: ["HS256"],
     });
 
-    next();
+    return next();
   } catch {
     return res.status(401).json({
       message: "Invalid or expired token",
@@ -75,56 +98,14 @@ function authenticateToken(req, res, next) {
 // ==========================================
 
 app.get("/api/test", (req, res) => {
-  res.json({
+  return res.status(200).json({
     message: "Backend is working!",
   });
 });
 
 // ==========================================
-// DATABASE CONNECTION TEST
-// ==========================================
-
-/*
-app.get("/api/db-test", async (req, res) => {
-  try {
-    const result = await pool.query("SELECT NOW()");
-
-    res.json({
-      message: "Database is working!",
-      time: result.rows[0].now,
-    });
-  } catch (error) {
-    console.error(error);
-
-    res.status(500).json({
-      message: "Database connection failed",
-    });
-  }
-});
-*/
-
-// ==========================================
-// USERS
-// ==========================================
-
-app.get("/api/users", async (req, res) => {
-  try {
-    const result = await pool.query(
-      "SELECT id, name, email, account_state, created_at FROM users"
-    );
-
-    res.json(result.rows);
-  } catch (error) {
-    console.error(error);
-
-    res.status(500).json({
-      message: "Could not retrieve users",
-    });
-  }
-});
-
-// ==========================================
-// SIGNUP
+// ACCOUNT REGISTRATION
+// POST /api/auth/signup
 // ==========================================
 
 app.post("/api/auth/signup", async (req, res) => {
@@ -164,7 +145,7 @@ app.post("/api/auth/signup", async (req, res) => {
       user: result.rows[0],
     });
   } catch (error) {
-    console.error(error);
+    console.error("Signup error:", error);
 
     return res.status(500).json({
       message: "Could not create account",
@@ -173,7 +154,8 @@ app.post("/api/auth/signup", async (req, res) => {
 });
 
 // ==========================================
-// LOGIN
+// USER LOGIN
+// POST /api/auth/login
 // ==========================================
 
 app.post("/api/auth/login", async (req, res) => {
@@ -193,7 +175,12 @@ app.post("/api/auth/login", async (req, res) => {
 
     const result = await pool.query(
       `
-      SELECT id, name, email, password_hash, account_state
+      SELECT
+        id,
+        name,
+        email,
+        password_hash,
+        account_state
       FROM users
       WHERE email = $1
       `,
@@ -220,7 +207,9 @@ app.post("/api/auth/login", async (req, res) => {
     }
 
     const token = jwt.sign(
-      { userId: user.id },
+      {
+        userId: user.id,
+      },
       JWT_SECRET,
       {
         algorithm: "HS256",
@@ -296,6 +285,7 @@ app.get("/api/auth/me", authenticateToken, async (req, res) => {
 
 // ==========================================
 // LOGOUT
+// POST /api/auth/logout
 // ==========================================
 
 app.post("/api/auth/logout", authenticateToken, (req, res) => {
@@ -305,14 +295,20 @@ app.post("/api/auth/logout", authenticateToken, (req, res) => {
 });
 
 // ==========================================
-// USER PROFILE
+// AUTHENTICATED USER PROFILE
+// GET /api/profile
 // ==========================================
 
 app.get("/api/profile", authenticateToken, async (req, res) => {
   try {
     const result = await pool.query(
       `
-      SELECT id, name, email, account_state, created_at
+      SELECT
+        id,
+        name,
+        email,
+        account_state,
+        created_at
       FROM users
       WHERE id = $1
       `,
@@ -340,12 +336,17 @@ app.get("/api/profile", authenticateToken, async (req, res) => {
 
 // ==========================================
 // INTEREST TAGS
+// GET /api/interests
 // ==========================================
 
 app.get("/api/interests", async (req, res) => {
   try {
     const result = await pool.query(
-      "SELECT id, name FROM interest_tags ORDER BY name ASC"
+      `
+      SELECT id, name
+      FROM interest_tags
+      ORDER BY name ASC
+      `
     );
 
     return res.status(200).json({
@@ -385,7 +386,7 @@ async function activateUser(userId) {
 }
 
 // ==========================================
-// START SERVER
+// START EXPRESS SERVER
 // ==========================================
 
 app.listen(PORT, () => {
