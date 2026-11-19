@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { fireEvent, render, screen, within } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { friendshipApi } from "../services/friendshipApi";
 import { friendRecommendationApi } from "../services/friendRecommendationApi";
 import FriendSuggestionsPage from "./FriendSuggestionsPage";
@@ -46,6 +47,14 @@ const suggestions = [
   },
 ];
 
+function renderPage(props = {}) {
+  return render(
+    <MemoryRouter>
+      <FriendSuggestionsPage {...props} />
+    </MemoryRouter>
+  );
+}
+
 describe("FriendSuggestionsPage", () => {
   beforeEach(() => {
     localStorage.setItem("token", "test-token");
@@ -69,7 +78,7 @@ describe("FriendSuggestionsPage", () => {
   });
 
   test("loads API recommendations and excludes users with pending requests", async () => {
-    render(<FriendSuggestionsPage userId={1} />);
+    renderPage({ userId: 1 });
 
     expect(
       screen.getByRole("heading", { name: "Friend Suggestions" })
@@ -81,8 +90,18 @@ describe("FriendSuggestionsPage", () => {
     expect(friendshipApi.getFriends).toHaveBeenCalledOnce();
   });
 
+  test("links to the canonical Friends route", async () => {
+    renderPage({ userId: 1 });
+
+    await screen.findByText("LoFiLuna");
+
+    expect(
+      screen.getByRole("link", { name: "Manage Friends" })
+    ).toHaveAttribute("href", "/friends");
+  });
+
   test("shows recommendation cards in descending similarity order", async () => {
-    render(<FriendSuggestionsPage userId={1} />);
+    renderPage({ userId: 1 });
 
     const region = await screen.findByRole("region", {
       name: "Recommended users",
@@ -95,7 +114,7 @@ describe("FriendSuggestionsPage", () => {
   });
 
   test("filters recommendations by media category", async () => {
-    render(<FriendSuggestionsPage userId={1} />);
+    renderPage({ userId: 1 });
     await screen.findByText("LoFiLuna");
 
     fireEvent.click(screen.getByRole("button", { name: "Music" }));
@@ -117,7 +136,7 @@ describe("FriendSuggestionsPage", () => {
   });
 
   test("sends a friend request through the friendship API", async () => {
-    render(<FriendSuggestionsPage userId={1} />);
+    renderPage({ userId: 1 });
     const lunaName = await screen.findByText("LoFiLuna");
     const card = lunaName.closest("article");
 
@@ -133,7 +152,7 @@ describe("FriendSuggestionsPage", () => {
   });
 
   test("opens and closes a suggested user's profile", async () => {
-    render(<FriendSuggestionsPage userId={1} />);
+    renderPage({ userId: 1 });
 
     const lunaCard = (await screen.findByText("LoFiLuna")).closest("article");
     fireEvent.click(
@@ -160,7 +179,7 @@ describe("FriendSuggestionsPage", () => {
   });
 
   test("refreshes recommendations from the API", async () => {
-    render(<FriendSuggestionsPage userId={1} />);
+    renderPage({ userId: 1 });
     await screen.findByText("LoFiLuna");
     friendRecommendationApi.getRecommendations.mockResolvedValueOnce({
       userId: 1,
@@ -182,7 +201,7 @@ describe("FriendSuggestionsPage", () => {
       new Error("Recommendation service unavailable.")
     );
 
-    render(<FriendSuggestionsPage userId={1} />);
+    renderPage({ userId: 1 });
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Recommendation service unavailable."
@@ -200,7 +219,7 @@ describe("FriendSuggestionsPage", () => {
 
   test("shows recommendations to guests without loading friendship data", async () => {
     localStorage.removeItem("token");
-    render(<FriendSuggestionsPage />);
+    renderPage();
 
     expect(await screen.findByText("LoFiLuna")).toBeInTheDocument();
     expect(screen.getByText(/Guest preview as user #1/)).toBeInTheDocument();
@@ -214,7 +233,7 @@ describe("FriendSuggestionsPage", () => {
   });
 
   test("closes the profile preview with Escape", async () => {
-    render(<FriendSuggestionsPage userId={1} />);
+    renderPage({ userId: 1 });
 
     const lunaCard = (await screen.findByText("LoFiLuna")).closest("article");
     fireEvent.click(
@@ -230,7 +249,7 @@ describe("FriendSuggestionsPage", () => {
     friendshipApi.sendRequest.mockRejectedValueOnce(
       new Error("Friend request failed.")
     );
-    render(<FriendSuggestionsPage userId={1} />);
+    renderPage({ userId: 1 });
 
     const lunaCard = (await screen.findByText("LoFiLuna")).closest("article");
     fireEvent.click(

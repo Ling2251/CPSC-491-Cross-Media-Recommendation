@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { persistAuthToken } from "../../services/authSession";
 import "./LandingPage.css";
 
@@ -8,14 +8,19 @@ const API_BASE_URL =
   import.meta.env.VITE_API_URL || "http://localhost:3001";
 
 export default function LandingPage({ onLogin }) {
+  const location = useLocation();
   const navigate = useNavigate();
 
-  const [form, setForm] = useState({
-    username: "",
+  const [form, setForm] = useState(() => ({
+    username: location.state?.email || "",
     password: "",
-  });
+  }));
 
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState(() =>
+    location.state?.signupSuccess
+      ? "Your account is ready. Log in to continue."
+      : ""
+  );
   const [loading, setLoading] = useState(false);
 
   const updateForm = (event) => {

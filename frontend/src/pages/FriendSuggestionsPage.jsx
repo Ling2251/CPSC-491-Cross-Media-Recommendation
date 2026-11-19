@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { FriendshipStatus } from "../models/friendship";
 import { readAuthToken } from "../services/authSession";
 import { friendRecommendationApi } from "../services/friendRecommendationApi";
@@ -183,9 +184,9 @@ function FriendSuggestionsPage({ userId }) {
         </div>
         <div className="suggestions-header-actions">
           {!isGuest && (
-            <a className="fr-btn-secondary" href="/manage-friends">
+            <Link className="fr-btn-secondary" to="/friends">
               Manage Friends
-            </a>
+            </Link>
           )}
           <button
             className="fr-btn-primary"

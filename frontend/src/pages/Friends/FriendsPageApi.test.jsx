@@ -8,6 +8,8 @@ import {
   vi,
 } from "vitest";
 
+import { MemoryRouter } from "react-router-dom";
+
 import {
   render,
   screen,
@@ -85,6 +87,14 @@ async function waitForPage() {
   await screen.findByText("User #2");
 }
 
+function renderFriendsPage() {
+  return render(
+    <MemoryRouter>
+      <FriendsPageApi />
+    </MemoryRouter>
+  );
+}
+
 describe("FriendsPageApi - React Component Tests", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -133,7 +143,7 @@ describe("FriendsPageApi - React Component Tests", () => {
         })
     );
 
-    render(<FriendsPageApi />);
+    renderFriendsPage();
 
     expect(
       screen.getByText("Loading your friendships...")
@@ -161,7 +171,7 @@ describe("FriendsPageApi - React Component Tests", () => {
   test("requires the user to log in", async () => {
     localStorage.removeItem("token");
 
-    render(<FriendsPageApi />);
+    renderFriendsPage();
 
     expect(
       await screen.findByText(
@@ -189,7 +199,7 @@ describe("FriendsPageApi - React Component Tests", () => {
       }),
     });
 
-    render(<FriendsPageApi />);
+    renderFriendsPage();
 
     expect(
       await screen.findByText(
@@ -209,7 +219,7 @@ describe("FriendsPageApi - React Component Tests", () => {
   test("rejects invalid profile information", async () => {
     mockProfile(null);
 
-    render(<FriendsPageApi />);
+    renderFriendsPage();
 
     expect(
       await screen.findByText(
@@ -223,7 +233,7 @@ describe("FriendsPageApi - React Component Tests", () => {
   // ==========================================
 
   test("displays accepted, incoming, and outgoing friendships", async () => {
-    render(<FriendsPageApi />);
+    renderFriendsPage();
 
     await waitForPage();
 
@@ -288,7 +298,7 @@ describe("FriendsPageApi - React Component Tests", () => {
       outgoing: [],
     });
 
-    render(<FriendsPageApi />);
+    renderFriendsPage();
 
     expect(
       await screen.findByText("No pending requests")
@@ -312,7 +322,7 @@ describe("FriendsPageApi - React Component Tests", () => {
   test("accepts an incoming friend request", async () => {
     const user = userEvent.setup();
 
-    render(<FriendsPageApi />);
+    renderFriendsPage();
 
     await screen.findByText("User #3");
 
@@ -346,7 +356,7 @@ describe("FriendsPageApi - React Component Tests", () => {
   test("declines an incoming friend request", async () => {
     const user = userEvent.setup();
 
-    render(<FriendsPageApi />);
+    renderFriendsPage();
 
     await screen.findByText("User #3");
 
@@ -376,7 +386,7 @@ describe("FriendsPageApi - React Component Tests", () => {
   test("cancels an outgoing request", async () => {
     const user = userEvent.setup();
 
-    render(<FriendsPageApi />);
+    renderFriendsPage();
 
     await screen.findByText("User #4");
 
@@ -406,7 +416,7 @@ describe("FriendsPageApi - React Component Tests", () => {
   test("removes an accepted friend", async () => {
     const user = userEvent.setup();
 
-    render(<FriendsPageApi />);
+    renderFriendsPage();
 
     await waitForPage();
 
@@ -436,7 +446,7 @@ describe("FriendsPageApi - React Component Tests", () => {
       new Error("Could not load friendships")
     );
 
-    render(<FriendsPageApi />);
+    renderFriendsPage();
 
     expect(
       await screen.findByText(
@@ -464,7 +474,7 @@ describe("FriendsPageApi - React Component Tests", () => {
       )
       .mockResolvedValue([acceptedFriendship]);
 
-    render(<FriendsPageApi />);
+    renderFriendsPage();
 
     expect(
       await screen.findByText(

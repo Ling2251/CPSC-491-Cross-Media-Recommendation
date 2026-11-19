@@ -1,5 +1,6 @@
 
 import { useCallback, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { friendshipApi } from "../../services/friendshipApi";
 import { readAuthToken } from "../../services/authSession";
 import "./FriendsPage.css";
@@ -282,9 +283,9 @@ export default function FriendsPageApi() {
             Manage your friends and friend requests.
           </p>
         </div>
-        <a className="fr-btn-primary" href="/suggestions">
+        <Link className="fr-btn-primary" to="/suggestions">
           Find Friends
-        </a>
+        </Link>
       </header>
 
       {/* LOADING MESSAGE */}
