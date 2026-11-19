@@ -1,19 +1,29 @@
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./LandingPage.css";
 
-export default function LandingPage() {
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:3001";
+
+export default function LandingPage({ onLogin }) {
+  const navigate = useNavigate();
+
   const [activeTab, setActiveTab] = useState("login");
+
   const [form, setForm] = useState({
     username: "",
     email: "",
     password: "",
     confirmPassword: "",
   });
+
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const updateForm = (event) => {
     const { name, value } = event.target;
+
     setForm((previous) => ({
       ...previous,
       [name]: value,
@@ -25,8 +35,13 @@ export default function LandingPage() {
     setMessage("");
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
+    setMessage("");
+
+    // ==========================================
+    // REGISTRATION - EXISTING PLACEHOLDER
+    // ==========================================
 
     if (activeTab === "register") {
       if (!form.username.trim() || !form.email.trim()) {
@@ -52,17 +67,84 @@ export default function LandingPage() {
       setMessage(
         "Registration form validated. Account creation is not connected yet."
       );
+
       return;
     }
 
-    if (!form.username.trim() || !form.password) {
-      setMessage("Please enter your username/email and password.");
+    // ==========================================
+    // LOGIN VALIDATION
+    // ==========================================
+
+    const email = form.username.trim();
+
+    if (!email || !form.password) {
+      setMessage("Please enter your email and password.");
       return;
     }
 
-    setMessage(
-      "Login form validated. Authentication is not connected yet."
-    );
+    // ==========================================
+    // BACKEND AUTHENTICATION
+    // ==========================================
+
+    setLoading(true);
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/auth/login`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email,
+            password: form.password,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setMessage(data.message || "Login failed.");
+        return;
+      }
+
+      if (!data.token || !data.user) {
+        setMessage(
+          "Login response is missing authentication information."
+        );
+        return;
+      }
+
+      if (typeof onLogin !== "function") {
+        setMessage("Login configuration error.");
+        return;
+      }
+
+      // Store JWT for authenticated API requests.
+      localStorage.setItem("token", data.token);
+
+      // Update App.jsx authentication state.
+      onLogin(data.user);
+
+      // Clear password from form state.
+      setForm((previous) => ({
+        ...previous,
+        password: "",
+      }));
+
+      // Navigate to the authenticated dashboard.
+      navigate("/dashboard");
+    } catch (error) {
+      console.error("Login error:", error);
+
+      setMessage(
+        "Could not connect to the server. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -109,16 +191,22 @@ export default function LandingPage() {
             <div className="auth-tabs">
               <button
                 type="button"
-                className={activeTab === "login" ? "active" : ""}
+                className={
+                  activeTab === "login" ? "active" : ""
+                }
                 onClick={() => switchTab("login")}
+                disabled={loading}
               >
                 Log In
               </button>
 
               <button
                 type="button"
-                className={activeTab === "register" ? "active" : ""}
+                className={
+                  activeTab === "register" ? "active" : ""
+                }
                 onClick={() => switchTab("register")}
+                disabled={loading}
               >
                 Create Account
               </button>
@@ -131,6 +219,7 @@ export default function LandingPage() {
                     <label htmlFor="register-username">
                       USERNAME
                     </label>
+
                     <input
                       id="register-username"
                       name="username"
@@ -147,6 +236,7 @@ export default function LandingPage() {
                     <label htmlFor="register-email">
                       EMAIL
                     </label>
+
                     <input
                       id="register-email"
                       name="email"
@@ -164,14 +254,15 @@ export default function LandingPage() {
               {activeTab === "login" && (
                 <div className="auth-field">
                   <label htmlFor="login-username">
-                    USERNAME OR EMAIL
+                    EMAIL
                   </label>
+
                   <input
                     id="login-username"
                     name="username"
-                    type="text"
-                    autoComplete="username"
-                    placeholder="Username or email..."
+                    type="email"
+                    autoComplete="email"
+                    placeholder="Email address..."
                     value={form.username}
                     onChange={updateForm}
                     required
@@ -183,6 +274,7 @@ export default function LandingPage() {
                 <label htmlFor="auth-password">
                   PASSWORD
                 </label>
+
                 <input
                   id="auth-password"
                   name="password"
@@ -204,6 +296,7 @@ export default function LandingPage() {
                   <label htmlFor="confirm-password">
                     CONFIRM PASSWORD
                   </label>
+
                   <input
                     id="confirm-password"
                     name="confirmPassword"
@@ -225,10 +318,16 @@ export default function LandingPage() {
                 </div>
               )}
 
-              <button className="auth-submit" type="submit">
-                {activeTab === "login"
-                  ? "Log In"
-                  : "Create Account"}
+              <button
+                className="auth-submit"
+                type="submit"
+                disabled={loading}
+              >
+                {loading
+                  ? "Logging in..."
+                  : activeTab === "login"
+                    ? "Log In"
+                    : "Create Account"}
               </button>
 
               {message && (
@@ -243,13 +342,27 @@ export default function LandingPage() {
             </div>
 
             <div className="auth-social-buttons">
-              <button type="button" disabled title="Coming soon">
+              <button
+                type="button"
+                disabled
+                title="Coming soon"
+              >
                 Google
               </button>
-              <button type="button" disabled title="Coming soon">
+
+              <button
+                type="button"
+                disabled
+                title="Coming soon"
+              >
                 Apple
               </button>
-              <button type="button" disabled title="Coming soon">
+
+              <button
+                type="button"
+                disabled
+                title="Coming soon"
+              >
                 Facebook
               </button>
             </div>
