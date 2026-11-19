@@ -281,6 +281,9 @@ export default function FriendsPageApi() {
             Manage your friends and friend requests.
           </p>
         </div>
+        <a className="fr-btn-primary" href="/suggestions">
+          Find Friends
+        </a>
       </header>
 
       {/* LOADING MESSAGE */}

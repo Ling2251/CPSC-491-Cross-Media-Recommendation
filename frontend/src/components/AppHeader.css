@@ -15,7 +15,7 @@
 
 .auth-logo {
   flex-shrink: 0;
-  color: #4dd4ca;
+  color: #ff9b6b;
   font-size: 22px;
 }
 
@@ -34,7 +34,7 @@
 
 .auth-nav a:hover,
 .auth-nav a:focus-visible {
-  color: #ed6227;
+  color: #ff9b6b;
 }
 
 .auth-navbar a:focus-visible {

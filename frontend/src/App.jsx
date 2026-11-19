@@ -2,13 +2,13 @@ import { useState } from "react";
 import { Routes, Route } from "react-router-dom";
 import AppHeader from "./components/AppHeader";
 
-import LandingPage from "./pages/Landing/LandingPage.jsx";
 import Dashboard from "./pages/Dashboard";
 import FriendsPage from "./pages/Friends/FriendsPage";
 import Login from "./pages/Login";
 import Onboarding from "./pages/Onboarding";
 import Signup from "./pages/Signup";
 import FriendSuggestionsPage from "./pages/FriendSuggestionsPage";
+import DiscoverPage from "./pages/DiscoverPage";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -30,17 +30,18 @@ function App() {
       : accountState === "ACTIVE"
         ? <Dashboard onLogout={handleLogout} />
         : <p>Unknown account state.</p>;
+  const isAuthenticated = Boolean(user || localStorage.getItem("token"));
 
   return (
     <>
-      <AppHeader />
+      {isAuthenticated && <AppHeader />}
       <Routes>
         <Route
           path="/manage-friends"
           element={<FriendsPage />}
         />
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/" element={accountPage} />
+        <Route path="/" element={<DiscoverPage isAuthenticated={isAuthenticated} />} />
+        <Route path="/discover" element={<DiscoverPage isAuthenticated={isAuthenticated} />} />
         <Route path="/login" element={accountPage} />
         <Route path="/friends" element={<FriendsPage />} />
         <Route path="/manage-friends" element={<FriendsPage />} />

@@ -5,11 +5,11 @@ import {
   within,
 } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import App from "./App";
 
-vi.mock("./pages/Landing/LandingPage.jsx", () => ({
-  default: () => <div>Landing page</div>,
+vi.mock("./pages/DiscoverPage", () => ({
+  default: () => <main>Discover page</main>,
 }));
 vi.mock("./pages/Dashboard", () => ({
   default: () => <h1>User Dashboard</h1>,
@@ -38,6 +38,10 @@ vi.mock("./pages/FriendSuggestionsPage", () => ({
 }));
 
 describe("App account routing", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
   test("opens the dashboard for an active account with lowercase state", () => {
     render(
       <MemoryRouter initialEntries={["/login"]}>
@@ -55,22 +59,52 @@ describe("App account routing", () => {
     ).not.toBeInTheDocument();
   });
 
-  test("renders the shared navigation on the suggestions route", () => {
+  test("opens Discover by default without a guest navigation bar", () => {
+    render(
+      <MemoryRouter initialEntries={["/"]}>
+        <App />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText("Discover page")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("navigation", { name: "Main navigation" })
+    ).not.toBeInTheDocument();
+  });
+
+  test("shows the requested navigation after login", () => {
+    render(
+      <MemoryRouter initialEntries={["/login"]}>
+        <App />
+      </MemoryRouter>
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Sign in as active user" }));
+
+    const navigation = screen.getByRole("navigation", {
+      name: "Main navigation",
+    });
+
+    expect(within(navigation).getByRole("link", { name: "Friends" }))
+      .toHaveAttribute("href", "/friends");
+    expect(within(navigation).getByRole("link", { name: "Forum" }))
+      .toHaveAttribute("href", "/forums");
+    expect(within(navigation).getByRole("link", { name: "Discover" }))
+      .toHaveAttribute("href", "/discover");
+    expect(within(navigation).getByRole("link", { name: "Profile" }))
+      .toHaveAttribute("href", "/profile");
+    expect(within(navigation).getAllByRole("link")).toHaveLength(4);
+  });
+
+  test("does not render navigation for guests on other routes", () => {
     render(
       <MemoryRouter initialEntries={["/suggestions"]}>
         <App />
       </MemoryRouter>
     );
 
-    const navigation = screen.getByRole("navigation", {
-      name: "Main navigation",
-    });
-
     expect(
-      within(navigation).getByRole("link", { name: "Friend Suggestions" })
-    ).toHaveAttribute("href", "/suggestions");
-    expect(
-      within(navigation).getByRole("link", { name: "Friends" })
-    ).toHaveAttribute("href", "/friends");
+      screen.queryByRole("navigation", { name: "Main navigation" })
+    ).not.toBeInTheDocument();
   });
 });

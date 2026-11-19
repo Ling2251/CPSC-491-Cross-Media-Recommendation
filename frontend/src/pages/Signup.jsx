@@ -1,6 +1,10 @@
 import { useState } from "react"
+import { Link, useLocation } from "react-router-dom"
+import "./Signup.css"
 
 function Signup() {
+  const location = useLocation()
+  const mediaTitle = location.state?.mediaTitle
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -36,55 +40,55 @@ function Signup() {
   }
 
   return (
-    <div>
-      <h1>Create Account</h1>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label htmlFor="signup-name">Name</label>
-          <br />
-          <input
-            id="signup-name"
-            type="text"
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            required
-          />
-        </div>
-
-        <br />
-
-        <div>
-          <label htmlFor="signup-email">Email</label>
-          <br />
-          <input
-            id="signup-email"
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            required
-          />
-        </div>
-
-        <br />
-
-        <div>
-          <label htmlFor="signup-password">Password</label>
-          <br />
-          <input
-            id="signup-password"
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            required
-          />
-        </div>
-
-        <br />
-
-        <button type="submit">Sign Up</button>
-      </form>
-      <p>{message}</p>
-    </div>
+    <main className="signup-page">
+      <section className="signup-panel">
+        <p className="signup-eyebrow">WELCOME TO CROSSMEDIA</p>
+        <h1>Create your account</h1>
+        <p className="signup-description">
+          {mediaTitle
+            ? `Join to save ${mediaTitle} and build a collection of everything you love.`
+            : "Save your favorites and discover more of what you love."}
+        </p>
+        <form onSubmit={handleSubmit}>
+          <div className="signup-field">
+            <label htmlFor="signup-name">Name</label>
+            <input
+              id="signup-name"
+              type="text"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              required
+            />
+          </div>
+          <div className="signup-field">
+            <label htmlFor="signup-email">Email</label>
+            <input
+              id="signup-email"
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              required
+            />
+          </div>
+          <div className="signup-field">
+            <label htmlFor="signup-password">Password</label>
+            <input
+              id="signup-password"
+              type="password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              required
+            />
+          </div>
+          <button type="submit">Create Account</button>
+        </form>
+        {message && <p className="signup-message" role="status">{message}</p>}
+        <p className="signup-login-prompt">
+          Already have an account? <Link to="/login">Log in</Link>
+        </p>
+        <Link className="signup-back-link" to="/discover">← Back to Discover</Link>
+      </section>
+    </main>
   )
 }
 

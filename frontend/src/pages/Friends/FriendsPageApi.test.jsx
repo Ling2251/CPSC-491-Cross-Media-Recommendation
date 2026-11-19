@@ -227,6 +227,10 @@ describe("FriendsPageApi - React Component Tests", () => {
 
     await waitForPage();
 
+    expect(
+      screen.getByRole("link", { name: "Find Friends" })
+    ).toHaveAttribute("href", "/suggestions");
+
     const friendsSection = screen
       .getByRole("heading", { name: "Your Friends" })
       .closest("section");
