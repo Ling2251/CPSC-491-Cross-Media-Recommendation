@@ -3,9 +3,10 @@ import {
   render,
   screen,
   within,
+  waitFor,
 } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import App from "./App";
 
 vi.mock("./pages/DiscoverPage", () => ({
@@ -40,6 +41,10 @@ vi.mock("./pages/FriendSuggestionsPage", () => ({
 describe("App account routing", () => {
   beforeEach(() => {
     localStorage.clear();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   test("opens the dashboard for an active account with lowercase state", () => {
@@ -106,5 +111,53 @@ describe("App account routing", () => {
     expect(
       screen.queryByRole("navigation", { name: "Main navigation" })
     ).not.toBeInTheDocument();
+  });
+
+  test("does not show navigation for an expired stored token", async () => {
+    localStorage.setItem("token", "expired-token");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({ ok: false, status: 401 })
+    );
+
+    render(
+      <MemoryRouter initialEntries={["/"]}>
+        <App />
+      </MemoryRouter>
+    );
+
+    expect(
+      screen.queryByRole("navigation", { name: "Main navigation" })
+    ).not.toBeInTheDocument();
+    await waitFor(() => expect(localStorage.getItem("token")).toBeNull());
+  });
+
+  test("shows navigation after verifying a stored session", async () => {
+    localStorage.setItem("token", "valid-token");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          user: { id: 8, account_state: "ACTIVE" },
+        }),
+      })
+    );
+
+    render(
+      <MemoryRouter initialEntries={["/"]}>
+        <App />
+      </MemoryRouter>
+    );
+
+    expect(
+      await screen.findByRole("navigation", { name: "Main navigation" })
+    ).toBeInTheDocument();
+    expect(fetch).toHaveBeenCalledWith(
+      "http://localhost:3001/api/profile",
+      expect.objectContaining({
+        headers: { Authorization: "Bearer valid-token" },
+      })
+    );
   });
 });
