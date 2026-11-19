@@ -1,6 +1,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { friendshipApi } from "../../services/friendshipApi";
+import { readAuthToken } from "../../services/authSession";
 import "./FriendsPage.css";
 
 // Backend API address
@@ -80,7 +81,7 @@ export default function FriendsPageApi() {
   // ==========================================
 
   const loadFriendships = useCallback(async () => {
-    const token = localStorage.getItem("token");
+    const token = readAuthToken();
 
     if (!token) {
       throw new Error(

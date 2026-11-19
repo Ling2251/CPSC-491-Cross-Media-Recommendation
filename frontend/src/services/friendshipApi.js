@@ -1,9 +1,11 @@
 
+import { readAuthToken } from "./authSession";
+
 const API_BASE_URL =
   import.meta.env.VITE_API_URL || "http://localhost:3001";
 
 async function apiRequest(path, options = {}) {
-  const token = localStorage.getItem("token");
+  const token = readAuthToken();
 
   if (!token) {
     throw new Error("Please log in to manage friendships.");

@@ -1,8 +1,10 @@
 import { useState } from "react"
+import { persistAuthToken } from "../services/authSession"
 
 function Login({ onLogin }) {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [stayLoggedIn, setStayLoggedIn] = useState(false)
   const [message, setMessage] = useState("")
 
   async function handleSubmit(event) {
@@ -40,7 +42,7 @@ function Login({ onLogin }) {
         return
       }
 
-      localStorage.setItem("token", data.token)
+      persistAuthToken(data.token, stayLoggedIn)
 
       setMessage("Login successful!")
 
@@ -57,9 +59,10 @@ function Login({ onLogin }) {
 
       <form onSubmit={handleSubmit}>
         <div>
-          <label>Email</label>
+          <label htmlFor="login-email">Email</label>
           <br />
           <input
+            id="login-email"
             type="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
@@ -69,16 +72,25 @@ function Login({ onLogin }) {
         <br />
 
         <div>
-          <label>Password</label>
+          <label htmlFor="login-password">Password</label>
           <br />
           <input
+            id="login-password"
             type="password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
           />
         </div>
 
-        <br />
+        <label className="login-stay-logged-in" htmlFor="stay-logged-in">
+          <input
+            id="stay-logged-in"
+            type="checkbox"
+            checked={stayLoggedIn}
+            onChange={(event) => setStayLoggedIn(event.target.checked)}
+          />
+          Stay logged in
+        </label>
 
         <button type="submit">
           Log In

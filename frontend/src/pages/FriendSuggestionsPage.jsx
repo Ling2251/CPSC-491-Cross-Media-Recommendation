@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { FriendshipStatus } from "../models/friendship";
+import { readAuthToken } from "../services/authSession";
 import { friendRecommendationApi } from "../services/friendRecommendationApi";
 import { friendshipApi } from "../services/friendshipApi";
 import FriendCard from "../components/friends/FriendCard";
@@ -14,7 +15,7 @@ const FILTERS = [
 ];
 
 function FriendSuggestionsPage({ userId }) {
-  const isGuest = !localStorage.getItem("token");
+  const isGuest = !readAuthToken();
   const [activeFilter, setActiveFilter] = useState("all");
   const [recommendations, setRecommendations] = useState([]);
   const [recommendationUserId, setRecommendationUserId] = useState(

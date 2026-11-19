@@ -9,18 +9,22 @@ import Onboarding from "./pages/Onboarding";
 import Signup from "./pages/Signup";
 import FriendSuggestionsPage from "./pages/FriendSuggestionsPage";
 import DiscoverPage from "./pages/DiscoverPage";
+import {
+  clearAuthSession,
+  readAuthToken,
+} from "./services/authSession";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
 
 function App() {
   const [user, setUser] = useState(null);
   const [sessionChecked, setSessionChecked] = useState(
-    () => !localStorage.getItem("token")
+    () => !readAuthToken()
   );
   const [sessionError, setSessionError] = useState("");
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const token = readAuthToken();
     if (!token) return undefined;
 
     let active = true;
@@ -35,7 +39,7 @@ function App() {
 
         if (!response.ok) {
           if (response.status === 401 || response.status === 404) {
-            localStorage.removeItem("token");
+            clearAuthSession();
             return;
           }
 
@@ -67,7 +71,7 @@ function App() {
   }
 
   function handleLogout() {
-    localStorage.removeItem("token");
+    clearAuthSession();
     setUser(null);
   }
 
