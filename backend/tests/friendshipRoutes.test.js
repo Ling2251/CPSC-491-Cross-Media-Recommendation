@@ -182,6 +182,46 @@ describe("Friendship API Routes", () => {
     assert.equal(response.status, 400);
   });
 
+  it("returns a conflict for a duplicate request", async () => {
+    mock.method(
+      friendshipService,
+      "sendRequest",
+      async () => {
+        throw new Error(
+          "A friendship or request already exists."
+        );
+      }
+    );
+
+    const response = await authenticated(
+      "post",
+      "/api/friends/requests"
+    ).send({ receiverId: 2 });
+
+    assert.equal(response.status, 409);
+    assert.equal(response.body.success, false);
+  });
+
+  it("returns not found when the recipient does not exist", async () => {
+    mock.method(
+      friendshipService,
+      "sendRequest",
+      async () => {
+        const error = new Error("User does not exist");
+        error.code = "23503";
+        throw error;
+      }
+    );
+
+    const response = await authenticated(
+      "post",
+      "/api/friends/requests"
+    ).send({ receiverId: 999 });
+
+    assert.equal(response.status, 404);
+    assert.equal(response.body.message, "User does not exist");
+  });
+
   it("accepts a pending request", async () => {
     const serviceMock = mock.method(
       friendshipService,
@@ -295,6 +335,27 @@ describe("Friendship API Routes", () => {
       "patch",
       "/api/friends/requests/10/accept",
       3
+    );
+
+    assert.equal(response.status, 404);
+    assert.equal(response.body.success, false);
+  });
+
+  it("returns not found when a request is no longer pending", async () => {
+    mock.method(
+      friendshipService,
+      "acceptRequest",
+      async () => {
+        throw new Error(
+          "Pending request not found or not authorized."
+        );
+      }
+    );
+
+    const response = await authenticated(
+      "patch",
+      "/api/friends/requests/10/accept",
+      2
     );
 
     assert.equal(response.status, 404);

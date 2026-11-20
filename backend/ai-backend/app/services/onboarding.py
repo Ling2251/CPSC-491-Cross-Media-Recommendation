@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 from app.preferences import PreferenceInput, SurveyQuestion
 from app.services.preference_manager import PreferenceManager
 
@@ -13,7 +13,7 @@ class OnboardingFlow:
     def __init__(self, preference_manager: PreferenceManager):
         self.preference_manager = preference_manager
         self._index = 0
-        self.preferences: Optional[PreferenceInput] = None
+        self.preferences: PreferenceInput | None = None
 
     def get_current_step(self) -> str:
         return self.steps[self._index]

@@ -45,3 +45,31 @@ a {
 button {
   font-family: inherit;
 }
+
+.app-session-error {
+  padding: 12px 20px;
+  color: #ffb28e;
+  background: #38261f;
+  border-bottom: 1px solid #78402a;
+  font-size: 14px;
+  text-align: center;
+}
+
+.app-session-error a {
+  color: #ffffff;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.login-stay-logged-in {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0 16px;
+  color: #c8c0b9;
+  font-size: 14px;
+}
+
+.login-stay-logged-in input {
+  accent-color: #ed6227;
+}

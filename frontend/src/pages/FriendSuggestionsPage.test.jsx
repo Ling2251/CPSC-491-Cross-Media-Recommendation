@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { fireEvent, render, screen, within } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { friendshipApi } from "../services/friendshipApi";
 import { friendRecommendationApi } from "../services/friendRecommendationApi";
 import FriendSuggestionsPage from "./FriendSuggestionsPage";
@@ -46,6 +47,14 @@ const suggestions = [
   },
 ];
 
+function renderPage(props = {}) {
+  return render(
+    <MemoryRouter>
+      <FriendSuggestionsPage {...props} />
+    </MemoryRouter>
+  );
+}
+
 describe("FriendSuggestionsPage", () => {
   beforeEach(() => {
     localStorage.setItem("token", "test-token");
@@ -69,7 +78,7 @@ describe("FriendSuggestionsPage", () => {
   });
 
   test("loads API recommendations and excludes users with pending requests", async () => {
-    render(<FriendSuggestionsPage userId={1} />);
+    renderPage({ userId: 1 });
 
     expect(
       screen.getByRole("heading", { name: "Friend Suggestions" })
@@ -81,8 +90,18 @@ describe("FriendSuggestionsPage", () => {
     expect(friendshipApi.getFriends).toHaveBeenCalledOnce();
   });
 
+  test("links to the canonical Friends route", async () => {
+    renderPage({ userId: 1 });
+
+    await screen.findByText("LoFiLuna");
+
+    expect(
+      screen.getByRole("link", { name: "Manage Friends" })
+    ).toHaveAttribute("href", "/friends");
+  });
+
   test("shows recommendation cards in descending similarity order", async () => {
-    render(<FriendSuggestionsPage userId={1} />);
+    renderPage({ userId: 1 });
 
     const region = await screen.findByRole("region", {
       name: "Recommended users",
@@ -95,7 +114,7 @@ describe("FriendSuggestionsPage", () => {
   });
 
   test("filters recommendations by media category", async () => {
-    render(<FriendSuggestionsPage userId={1} />);
+    renderPage({ userId: 1 });
     await screen.findByText("LoFiLuna");
 
     fireEvent.click(screen.getByRole("button", { name: "Music" }));
@@ -108,18 +127,22 @@ describe("FriendSuggestionsPage", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Movies" }));
-    expect(screen.getByText("No suggestions found")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "No matches in this category" })
+    ).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "All" }));
     expect(screen.getByText("BookishBen")).toBeInTheDocument();
   });
 
   test("sends a friend request through the friendship API", async () => {
-    render(<FriendSuggestionsPage userId={1} />);
+    renderPage({ userId: 1 });
     const lunaName = await screen.findByText("LoFiLuna");
     const card = lunaName.closest("article");
 
-    fireEvent.click(within(card).getByRole("button", { name: "Add Friend" }));
+    fireEvent.click(
+      within(card).getByRole("button", { name: "Add LoFiLuna as a friend" })
+    );
 
     expect(await screen.findByRole("status")).toHaveTextContent(
       "Friend request sent."
@@ -129,11 +152,11 @@ describe("FriendSuggestionsPage", () => {
   });
 
   test("opens and closes a suggested user's profile", async () => {
-    render(<FriendSuggestionsPage userId={1} />);
+    renderPage({ userId: 1 });
 
     const lunaCard = (await screen.findByText("LoFiLuna")).closest("article");
     fireEvent.click(
-      within(lunaCard).getByRole("button", { name: "View Profile" })
+      within(lunaCard).getByRole("button", { name: "View LoFiLuna's profile" })
     );
 
     const dialog = screen.getByRole("dialog");
@@ -141,6 +164,13 @@ describe("FriendSuggestionsPage", () => {
       within(dialog).getByRole("heading", { name: "LoFiLuna" })
     ).toBeInTheDocument();
     expect(within(dialog).getByText("jazz")).toBeInTheDocument();
+    expect(within(dialog).getByText("70%")).toBeInTheDocument();
+    expect(
+      within(dialog).getByText(/hasn’t added a bio yet/)
+    ).toBeInTheDocument();
+    expect(
+      within(dialog).getByRole("progressbar", { name: "Music match" })
+    ).toHaveAttribute("aria-valuenow", "70");
 
     fireEvent.click(
       within(dialog).getByRole("button", { name: "Close profile" })
@@ -149,7 +179,7 @@ describe("FriendSuggestionsPage", () => {
   });
 
   test("refreshes recommendations from the API", async () => {
-    render(<FriendSuggestionsPage userId={1} />);
+    renderPage({ userId: 1 });
     await screen.findByText("LoFiLuna");
     friendRecommendationApi.getRecommendations.mockResolvedValueOnce({
       userId: 1,
@@ -160,7 +190,9 @@ describe("FriendSuggestionsPage", () => {
       screen.getByRole("button", { name: "Refresh Recommendations" })
     );
 
-    expect(await screen.findByText("No suggestions found")).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: "You’re all caught up" })
+    ).toBeInTheDocument();
     expect(friendRecommendationApi.getRecommendations).toHaveBeenCalledTimes(2);
   });
 
@@ -169,26 +201,67 @@ describe("FriendSuggestionsPage", () => {
       new Error("Recommendation service unavailable.")
     );
 
-    render(<FriendSuggestionsPage userId={1} />);
+    renderPage({ userId: 1 });
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Recommendation service unavailable."
     );
     expect(screen.queryByText("LoFiLuna")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", {
+        name: "We couldn’t load your suggestions",
+      })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: "You’re all caught up" })
+    ).not.toBeInTheDocument();
   });
 
   test("shows recommendations to guests without loading friendship data", async () => {
     localStorage.removeItem("token");
-    render(<FriendSuggestionsPage />);
+    renderPage();
 
     expect(await screen.findByText("LoFiLuna")).toBeInTheDocument();
     expect(screen.getByText(/Guest preview as user #1/)).toBeInTheDocument();
     expect(
-      screen.getAllByRole("button", { name: "View Profile" }).length
+      screen.getAllByRole("button", { name: /View .*'s profile/ }).length
     ).toBeGreaterThan(0);
     expect(
-      screen.queryByRole("button", { name: "Add Friend" })
+      screen.queryByRole("button", { name: /Add .* as a friend/ })
     ).not.toBeInTheDocument();
     expect(friendshipApi.getFriends).not.toHaveBeenCalled();
+  });
+
+  test("closes the profile preview with Escape", async () => {
+    renderPage({ userId: 1 });
+
+    const lunaCard = (await screen.findByText("LoFiLuna")).closest("article");
+    fireEvent.click(
+      within(lunaCard).getByRole("button", { name: "View LoFiLuna's profile" })
+    );
+
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    fireEvent.keyDown(window, { key: "Escape" });
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  test("keeps a suggestion visible and reports a failed friend request", async () => {
+    friendshipApi.sendRequest.mockRejectedValueOnce(
+      new Error("Friend request failed.")
+    );
+    renderPage({ userId: 1 });
+
+    const lunaCard = (await screen.findByText("LoFiLuna")).closest("article");
+    fireEvent.click(
+      within(lunaCard).getByRole("button", { name: "Add LoFiLuna as a friend" })
+    );
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Friend request failed."
+    );
+    expect(screen.getByText("LoFiLuna")).toBeInTheDocument();
+    expect(
+      within(lunaCard).getByRole("button", { name: "Add LoFiLuna as a friend" })
+    ).toBeEnabled();
   });
 });

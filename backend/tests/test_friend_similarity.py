@@ -156,3 +156,34 @@ def test_missing_candidate_profile_is_rejected():
             USER_A["preferences"],
             [{"user_id": 20}],
         )
+
+
+@pytest.mark.parametrize(
+    "candidate_id",
+    [None, 0, -1, True, 1.5, "20"],
+)
+def test_invalid_candidate_ids_are_rejected(candidate_id):
+    with pytest.raises(ValueError, match="positive integer user_id"):
+        rank_candidates(
+            USER_A["preferences"],
+            [{"user_id": candidate_id, "preferences": {}}],
+        )
+
+
+def test_non_mapping_candidate_is_rejected_cleanly():
+    with pytest.raises(ValueError, match="candidate must be a mapping"):
+        rank_candidates(USER_A["preferences"], [None])
+
+
+def test_non_iterable_candidates_are_rejected_cleanly():
+    with pytest.raises(ValueError, match="candidates must be iterable"):
+        rank_candidates(USER_A["preferences"], None)
+
+
+def test_invalid_current_user_id_is_rejected_cleanly():
+    with pytest.raises(ValueError, match="current_user_id must be a positive integer"):
+        rank_candidates(
+            USER_A["preferences"],
+            [],
+            current_user_id=True,
+        )

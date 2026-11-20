@@ -1,6 +1,8 @@
 
 import { useCallback, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { friendshipApi } from "../../services/friendshipApi";
+import { readAuthToken } from "../../services/authSession";
 import "./FriendsPage.css";
 
 // Backend API address
@@ -71,7 +73,6 @@ export default function FriendsPageApi() {
 
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
-  const [receiverId, setReceiverId] = useState("");
 
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -81,7 +82,7 @@ export default function FriendsPageApi() {
   // ==========================================
 
   const loadFriendships = useCallback(async () => {
-    const token = localStorage.getItem("token");
+    const token = readAuthToken();
 
     if (!token) {
       throw new Error(
@@ -205,12 +206,10 @@ export default function FriendsPageApi() {
       await action();
       await refreshFriendships();
       setMessage(successMessage);
-      return true;
     } catch (err) {
       setError(
         err.message || "Friendship operation failed."
       );
-      return false;
     } finally {
       setBusy(false);
     }
@@ -219,31 +218,6 @@ export default function FriendsPageApi() {
   // ==========================================
   // FRIENDSHIP BUTTON HANDLERS
   // ==========================================
-
-  async function handleSendRequest(event) {
-    event.preventDefault();
-    const candidate = receiverId.trim();
-    const id = Number(candidate);
-
-    if (!/^[1-9]\d*$/.test(candidate) ||
-        !Number.isSafeInteger(id) || id > 2147483647) {
-      setMessage("");
-      setError("Enter a valid positive user ID.");
-      return;
-    }
-
-    if (id === currentUserId) {
-      setMessage("");
-      setError("You cannot send a friend request to yourself.");
-      return;
-    }
-
-    const successful = await performAction(
-      () => friendshipApi.sendRequest(id),
-      "Friend request sent."
-    );
-    if (successful) setReceiverId("");
-  }
 
   function handleAccept(requestId) {
     return performAction(
@@ -309,31 +283,10 @@ export default function FriendsPageApi() {
             Manage your friends and friend requests.
           </p>
         </div>
+        <Link className="fr-btn-primary" to="/suggestions">
+          Find Friends
+        </Link>
       </header>
-
-      {/* Sprint 4: send a real request through the authenticated API. */}
-      {!loading && currentUserId !== null && (
-        <section aria-label="Send a friend request">
-          <h2 className="fr-title">Send a Friend Request</h2>
-          <form className="fr-send-form" onSubmit={handleSendRequest}>
-            <label htmlFor="friend-receiver-id">User ID</label>
-            <input
-              id="friend-receiver-id"
-              type="number"
-              min="1"
-              step="1"
-              value={receiverId}
-              onChange={(event) => setReceiverId(event.target.value)}
-              placeholder="Enter another user's ID"
-              disabled={busy}
-              required
-            />
-            <button type="submit" className="fr-btn-primary" disabled={busy}>
-              Send Request
-            </button>
-          </form>
-        </section>
-      )}
 
       {/* LOADING MESSAGE */}
       {loading && (

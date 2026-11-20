@@ -1,0 +1,92 @@
+﻿.auth-navbar {
+  position: relative;
+  z-index: 20;
+  min-height: 59px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 0 33px;
+  color: #f4efe9;
+  background: #221f1c;
+  border-bottom: 1px solid #3a3530;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+.auth-logo {
+  flex-shrink: 0;
+  color: #f08a5c;
+  font-size: 22px;
+}
+
+.auth-nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 24px;
+}
+
+.auth-nav a {
+  color: #c9c0b5;
+  font-size: 16px;
+  transition: color 0.2s;
+}
+
+.auth-nav a:hover,
+.auth-nav a:focus-visible {
+  color: #f08a5c;
+}
+
+.auth-nav .auth-dashboard-link {
+  color: #f08a5c;
+  font-weight: 700;
+}
+
+.auth-logout {
+  padding: 6px 12px;
+  color: #f08a5c;
+  background: transparent;
+  border: 1px solid #2c211c;
+  border-radius: 20px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+}
+
+.auth-logout:hover {
+  background: #2c211c;
+  border-color: #e8794a;
+}
+
+.auth-navbar a:focus-visible {
+  outline: 2px solid #f08a5c;
+  outline-offset: 4px;
+}
+
+.auth-logout:focus-visible {
+  outline: 2px solid #f08a5c;
+  outline-offset: 4px;
+}
+
+@media (max-width: 700px) {
+  .auth-navbar {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 16px 20px;
+  }
+
+  .auth-nav {
+    justify-content: flex-start;
+    gap: 12px 18px;
+  }
+
+  .auth-nav a {
+    font-size: 14px;
+  }
+
+  .auth-logout {
+    font-size: 14px;
+  }
+}
+
+
