@@ -20,7 +20,7 @@ class FakeConnection:
         self.closed = False
 
     def execute(self, query, params):
-        assert "account_state = 'active'" in query
+        assert "UPPER(account_state) = 'ACTIVE'" in query
         assert params == ([8],)
         return FakeResult()
 
