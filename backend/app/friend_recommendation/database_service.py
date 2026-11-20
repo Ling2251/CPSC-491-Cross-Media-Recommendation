@@ -34,7 +34,7 @@ MEDIA_TYPE_CASE_SQL = """
 _USER_EXISTS_SQL = """
     SELECT id
     FROM users
-    WHERE id = %s AND account_state = 'active'
+    WHERE id = %s AND UPPER(account_state) = 'ACTIVE'
 """
 
 _USER_INTERACTIONS_SQL = f"""
@@ -63,7 +63,7 @@ _USER_INTERACTIONS_SQL = f"""
 _ACTIVE_USER_IDS_SQL = """
     SELECT id
     FROM users
-    WHERE account_state = 'active'
+    WHERE UPPER(account_state) = 'ACTIVE'
     ORDER BY id
 """
 
@@ -81,7 +81,7 @@ _ACTIVE_USER_INTERACTIONS_SQL = f"""
         ) AS tags
     FROM user_media_interactions AS umi
     JOIN users AS u
-        ON u.id = umi.user_id AND u.account_state = 'active'
+        ON u.id = umi.user_id AND UPPER(u.account_state) = 'ACTIVE'
     JOIN media AS m ON m.id = umi.media_id
     LEFT JOIN media_tags AS mt
         ON mt.media_id = m.id AND mt.status = 'approved'
@@ -227,7 +227,7 @@ def load_active_user_names(
             """
             SELECT id, name
             FROM users
-            WHERE account_state = 'active'
+            WHERE UPPER(account_state) = 'ACTIVE'
             ORDER BY id
             """
         ).fetchall()
