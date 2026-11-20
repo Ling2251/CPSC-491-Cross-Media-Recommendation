@@ -1,8 +1,10 @@
+import { readAuthToken } from "./authSession";
+
 export const AI_API_URL =
   import.meta.env.VITE_AI_API_URL || "http://localhost:8000";
 
 export function getStoredToken() {
-  return localStorage.getItem("token");
+  return readAuthToken();
 }
 
 export function userIdFromToken(token) {

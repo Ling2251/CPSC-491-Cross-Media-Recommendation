@@ -1,6 +1,5 @@
 __pycache__/
 *.py[cod]
-*.pyc
 *$py.class
 *.so
 .Python
@@ -23,8 +22,6 @@ wheels/
 venv/
 ENV/
 .env
-.env.*
-!.env.example
 .pytest_cache/
 .coverage
 htmlcov/
@@ -32,6 +29,3 @@ htmlcov/
 .idea/
 .vscode/
 *.log
-node_modules/
-frontend/node_modules/
-backend/node_modules/

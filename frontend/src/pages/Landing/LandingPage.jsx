@@ -1,87 +1,114 @@
 
 import { useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { persistAuthToken } from "../../services/authSession";
 import "./LandingPage.css";
 
-export default function LandingPage() {
-  const [activeTab, setActiveTab] = useState("login");
-  const [form, setForm] = useState({
-    username: "",
-    email: "",
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:3001";
+
+export default function LandingPage({ onLogin }) {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const [form, setForm] = useState(() => ({
+    username: location.state?.email || "",
     password: "",
-    confirmPassword: "",
-  });
-  const [message, setMessage] = useState("");
+  }));
+
+  const [message, setMessage] = useState(() =>
+    location.state?.signupSuccess
+      ? "Your account is ready. Log in to continue."
+      : ""
+  );
+  const [loading, setLoading] = useState(false);
 
   const updateForm = (event) => {
     const { name, value } = event.target;
+
     setForm((previous) => ({
       ...previous,
       [name]: value,
     }));
   };
 
-  const switchTab = (tab) => {
-    setActiveTab(tab);
-    setMessage("");
-  };
-
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
+    setMessage("");
 
-    if (activeTab === "register") {
-      if (!form.username.trim() || !form.email.trim()) {
-        setMessage("Please complete all required fields.");
+    const email = form.username.trim();
+
+    if (!email || !form.password) {
+      setMessage("Please enter your email and password.");
+      return;
+    }
+
+    // ==========================================
+    // BACKEND AUTHENTICATION
+    // ==========================================
+
+    setLoading(true);
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/auth/login`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email,
+            password: form.password,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setMessage(data.message || "Login failed.");
         return;
       }
 
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
-        setMessage("Please enter a valid email address.");
+      if (!data.token || !data.user) {
+        setMessage(
+          "Login response is missing authentication information."
+        );
         return;
       }
 
-      if (form.password.length < 8) {
-        setMessage("Password must be at least 8 characters.");
+      if (typeof onLogin !== "function") {
+        setMessage("Login configuration error.");
         return;
       }
 
-      if (form.password !== form.confirmPassword) {
-        setMessage("Passwords do not match.");
-        return;
-      }
+      persistAuthToken(data.token, true);
+
+      // Update App.jsx authentication state.
+      onLogin(data.user);
+
+      // Clear password from form state.
+      setForm((previous) => ({
+        ...previous,
+        password: "",
+      }));
+
+      // Navigate to the authenticated dashboard.
+      navigate("/dashboard");
+    } catch (error) {
+      console.error("Login error:", error);
 
       setMessage(
-        "Registration form validated. Account creation is not connected yet."
+        "Could not connect to the server. Please try again."
       );
-      return;
+    } finally {
+      setLoading(false);
     }
-
-    if (!form.username.trim() || !form.password) {
-      setMessage("Please enter your username/email and password.");
-      return;
-    }
-
-    setMessage(
-      "Login form validated. Authentication is not connected yet."
-    );
   };
 
   return (
     <div className="auth-landing">
-      <header className="auth-navbar">
-        <a className="auth-logo" href="/">
-          Main-page
-        </a>
-
-        <nav className="auth-nav">
-          <a href="/">Home</a>
-          <a href="/discover">Discover</a>
-          <a href="/friends">Friends</a>
-          <a href="/suggestions">Friend Suggestions</a>
-          <a href="/forums">Forums</a>
-          <a href="/profile">Profile</a>
-        </nav>
-      </header>
-
       <main className="auth-layout">
         {/* LEFT SIDE */}
         <section className="auth-intro">
@@ -100,6 +127,9 @@ export default function LandingPage() {
               <li>Community forums and friend activity</li>
               <li>Build and share personal libraries</li>
             </ul>
+            <Link className="auth-explore-link" to="/discover">
+              Explore as a guest <span aria-hidden="true">→</span>
+            </Link>
           </div>
         </section>
 
@@ -109,89 +139,44 @@ export default function LandingPage() {
             <div className="auth-tabs">
               <button
                 type="button"
-                className={activeTab === "login" ? "active" : ""}
-                onClick={() => switchTab("login")}
+                className="active"
+                disabled={loading}
               >
                 Log In
               </button>
-
-              <button
-                type="button"
-                className={activeTab === "register" ? "active" : ""}
-                onClick={() => switchTab("register")}
-              >
+              <Link className="auth-tab-link" to="/signup">
                 Create Account
-              </button>
+              </Link>
             </div>
 
             <form onSubmit={handleSubmit}>
-              {activeTab === "register" && (
-                <>
-                  <div className="auth-field">
-                    <label htmlFor="register-username">
-                      USERNAME
-                    </label>
-                    <input
-                      id="register-username"
-                      name="username"
-                      type="text"
-                      autoComplete="username"
-                      placeholder="Choose a username..."
-                      value={form.username}
-                      onChange={updateForm}
-                      required
-                    />
-                  </div>
+              <div className="auth-field">
+                <label htmlFor="login-username">
+                  EMAIL
+                </label>
 
-                  <div className="auth-field">
-                    <label htmlFor="register-email">
-                      EMAIL
-                    </label>
-                    <input
-                      id="register-email"
-                      name="email"
-                      type="email"
-                      autoComplete="email"
-                      placeholder="Email address..."
-                      value={form.email}
-                      onChange={updateForm}
-                      required
-                    />
-                  </div>
-                </>
-              )}
-
-              {activeTab === "login" && (
-                <div className="auth-field">
-                  <label htmlFor="login-username">
-                    USERNAME OR EMAIL
-                  </label>
-                  <input
-                    id="login-username"
-                    name="username"
-                    type="text"
-                    autoComplete="username"
-                    placeholder="Username or email..."
-                    value={form.username}
-                    onChange={updateForm}
-                    required
-                  />
-                </div>
-              )}
+                <input
+                  id="login-username"
+                  name="username"
+                  type="email"
+                  autoComplete="email"
+                  placeholder="Email address..."
+                  value={form.username}
+                  onChange={updateForm}
+                  required
+                />
+              </div>
 
               <div className="auth-field">
                 <label htmlFor="auth-password">
                   PASSWORD
                 </label>
+
                 <input
                   id="auth-password"
                   name="password"
                   type="password"
-                  autoComplete={
-                    activeTab === "login"
-                      ? "current-password"
-                      : "new-password"
-                  }
+                  autoComplete="current-password"
                   placeholder="Password..."
                   value={form.password}
                   onChange={updateForm}
@@ -199,36 +184,12 @@ export default function LandingPage() {
                 />
               </div>
 
-              {activeTab === "register" && (
-                <div className="auth-field">
-                  <label htmlFor="confirm-password">
-                    CONFIRM PASSWORD
-                  </label>
-                  <input
-                    id="confirm-password"
-                    name="confirmPassword"
-                    type="password"
-                    autoComplete="new-password"
-                    placeholder="Confirm password..."
-                    value={form.confirmPassword}
-                    onChange={updateForm}
-                    required
-                  />
-                </div>
-              )}
-
-              {activeTab === "login" && (
-                <div className="auth-forgot">
-                  <span>
-                    Forgot password? Contact support.
-                  </span>
-                </div>
-              )}
-
-              <button className="auth-submit" type="submit">
-                {activeTab === "login"
-                  ? "Log In"
-                  : "Create Account"}
+              <button
+                className="auth-submit"
+                type="submit"
+                disabled={loading}
+              >
+                {loading ? "Logging in..." : "Log In"}
               </button>
 
               {message && (
@@ -237,28 +198,6 @@ export default function LandingPage() {
                 </p>
               )}
             </form>
-
-            <div className="auth-divider">
-              <span>or continue with</span>
-            </div>
-
-            <div className="auth-social-buttons">
-              <button type="button" disabled title="Coming soon">
-                Google
-              </button>
-              <button type="button" disabled title="Coming soon">
-                Apple
-              </button>
-              <button type="button" disabled title="Coming soon">
-                Facebook
-              </button>
-            </div>
-
-            <p className="auth-legal">
-              By continuing you agree to our{" "}
-              <span>Terms of Service</span> and{" "}
-              <span>Privacy Policy</span>
-            </p>
           </div>
         </section>
       </main>

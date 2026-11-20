@@ -1,0 +1,124 @@
+.signup-page {
+  display: grid;
+  min-height: calc(100vh - 59px);
+  place-items: center;
+  padding: 48px 20px;
+  color: #f5f2ef;
+  background:
+    radial-gradient(ellipse at 50% 20%, rgb(237 98 39 / 15%), transparent 48%),
+    #171615;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.signup-panel {
+  width: min(100%, 470px);
+  padding: 38px;
+  background: #211f1d;
+  border: 1px solid #393430;
+  border-radius: 16px;
+  box-shadow: 0 20px 70px rgb(0 0 0 / 28%);
+}
+
+.signup-eyebrow {
+  color: #f28a58;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+}
+
+.signup-panel h1 {
+  margin: 10px 0 8px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 34px;
+  font-weight: 400;
+}
+
+.signup-description {
+  margin-bottom: 26px;
+  color: #aaa39e;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.signup-field {
+  display: grid;
+  gap: 7px;
+  margin-bottom: 16px;
+}
+
+.signup-field label {
+  color: #c8c0b9;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.signup-field input {
+  width: 100%;
+  min-height: 45px;
+  padding: 0 12px;
+  color: #f5f2ef;
+  background: #171615;
+  border: 1px solid #49423d;
+  border-radius: 8px;
+  font: inherit;
+}
+
+.signup-field input:focus {
+  border-color: #ed6227;
+  outline: 2px solid rgb(237 98 39 / 22%);
+}
+
+.signup-panel form > button {
+  width: 100%;
+  min-height: 46px;
+  margin-top: 5px;
+  color: white;
+  background: #ed6227;
+  border: 0;
+  border-radius: 24px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.signup-panel form > button:hover {
+  background: #fa753f;
+}
+
+.signup-message {
+  margin-top: 14px;
+  color: #ffb28e;
+  font-size: 13px;
+}
+
+.signup-login-prompt {
+  margin-top: 22px;
+  color: #aaa39e;
+  font-size: 13px;
+  text-align: center;
+}
+
+.signup-login-prompt a,
+.signup-back-link {
+  color: #f28a58;
+}
+
+.signup-back-link {
+  display: block;
+  margin-top: 20px;
+  font-size: 12px;
+  text-align: center;
+}
+
+.signup-panel a:focus-visible,
+.signup-panel button:focus-visible {
+  outline: 2px solid #ffb28e;
+  outline-offset: 3px;
+}
+
+@media (max-width: 500px) {
+  .signup-panel {
+    padding: 28px 22px;
+  }
+}

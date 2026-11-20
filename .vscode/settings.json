@@ -1,0 +1,15 @@
+{
+    "python.terminal.useEnvFile": true,
+    "sqltools.connections": [
+        {
+            "ssh": "Disabled",
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 5432,
+            "driver": "PostgreSQL",
+            "name": "Cross Media Project",
+            "database": "cross_media_recommendation",
+            "username": "postgres"
+        }
+    ]
+}

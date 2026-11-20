@@ -1,11 +1,27 @@
 
 const pool = require("../db");
 
+function validateId(value, name) {
+  if (
+    !Number.isSafeInteger(value) ||
+    value < 1 ||
+    value > 2147483647
+  ) {
+    const error = new Error(
+      `${name} must be a positive 32-bit integer.`
+    );
+    error.code = "INVALID_ID";
+    throw error;
+  }
+}
+
 class FriendshipService {
   // ==========================================
   // GET ACCEPTED FRIENDSHIPS
   // ==========================================
   async getFriends(userId) {
+    validateId(userId, "userId");
+
     const result = await pool.query(
       `SELECT *
        FROM friendships
@@ -22,6 +38,8 @@ class FriendshipService {
   // GET INCOMING FRIEND REQUESTS
   // ==========================================
   async getIncomingRequests(userId) {
+    validateId(userId, "userId");
+
     const result = await pool.query(
       `SELECT *
        FROM friendships
@@ -38,6 +56,8 @@ class FriendshipService {
   // GET OUTGOING FRIEND REQUESTS
   // ==========================================
   async getOutgoingRequests(userId) {
+    validateId(userId, "userId");
+
     const result = await pool.query(
       `SELECT *
        FROM friendships
@@ -54,7 +74,10 @@ class FriendshipService {
   // SEND FRIEND REQUEST
   // ==========================================
   async sendRequest(requesterId, receiverId) {
-    if (Number(requesterId) === Number(receiverId)) {
+    validateId(requesterId, "requesterId");
+    validateId(receiverId, "receiverId");
+
+    if (requesterId === receiverId) {
       throw new Error(
         "Cannot send a friend request to yourself."
       );
@@ -86,6 +109,9 @@ class FriendshipService {
   // ACCEPT FRIEND REQUEST
   // ==========================================
   async acceptRequest(requestId, userId) {
+    validateId(requestId, "requestId");
+    validateId(userId, "userId");
+
     const result = await pool.query(
       `UPDATE friendships
        SET status = 'accepted'
@@ -109,6 +135,9 @@ class FriendshipService {
   // DECLINE FRIEND REQUEST
   // ==========================================
   async declineRequest(requestId, userId) {
+    validateId(requestId, "requestId");
+    validateId(userId, "userId");
+
     const result = await pool.query(
       `UPDATE friendships
        SET status = 'declined'
@@ -132,6 +161,9 @@ class FriendshipService {
   // CANCEL OUTGOING REQUEST
   // ==========================================
   async cancelRequest(requestId, userId) {
+    validateId(requestId, "requestId");
+    validateId(userId, "userId");
+
     const result = await pool.query(
       `DELETE FROM friendships
        WHERE id = $1
@@ -154,6 +186,9 @@ class FriendshipService {
   // REMOVE ACCEPTED FRIEND
   // ==========================================
   async removeFriend(friendshipId, userId) {
+    validateId(friendshipId, "friendshipId");
+    validateId(userId, "userId");
+
     const result = await pool.query(
       `DELETE FROM friendships
        WHERE id = $1
