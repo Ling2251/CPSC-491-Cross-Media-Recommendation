@@ -1,0 +1,7 @@
+{
+  "name": "cross-media-recommendation",
+  "private": true,
+  "scripts": {
+    "dev:friends": "node scripts/dev-friend-recommendations.cjs"
+  }
+}
