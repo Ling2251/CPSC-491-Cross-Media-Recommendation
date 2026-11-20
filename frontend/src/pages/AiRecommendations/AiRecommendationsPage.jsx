@@ -33,7 +33,7 @@ const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === "true";
 const DEMO_USER_ID = 1;
 
 function AiRecommendationsPage() {
-  const [token] = useState(getStoredToken);
+  const [token] = useState(() => (DEMO_MODE ? null : getStoredToken()));
   const [userId] = useState(() =>
     DEMO_MODE ? DEMO_USER_ID : userIdFromToken(getStoredToken())
   );

@@ -1,11 +1,11 @@
-.discover-page {
+﻿.discover-page {
   min-height: 100vh;
   padding-bottom: 80px;
   color: #f5f2ef;
   background:
     radial-gradient(ellipse at 50% -18%, rgb(237 98 39 / 18%), transparent 48%),
     #171615;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 }
 
 .discover-header {
@@ -445,3 +445,4 @@
     transition: none;
   }
 }
+

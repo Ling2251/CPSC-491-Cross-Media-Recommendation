@@ -1,4 +1,4 @@
-
+﻿
 /* ==========================================
    CROSS MEDIA RECOMMENDATIONS
    DASHBOARD THEME
@@ -7,9 +7,9 @@
 .dashboard-page {
   min-height: 100vh;
   padding: 0 0 60px;
-  background: #292929;
-  color: #ffffff;
-  font-family: Arial, Helvetica, sans-serif;
+  background: #181614;
+  color: #f4efe9;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 }
 
 /* HEADER */
@@ -17,8 +17,8 @@
 .dashboard-header {
   min-height: 70px;
   padding: 16px 40px;
-  background: #1b1b1b;
-  border-bottom: 1px solid #393939;
+  background: #221f1c;
+  border-bottom: 1px solid #3a3530;
 
   display: flex;
   align-items: center;
@@ -28,14 +28,14 @@
 
 .dashboard-header h1 {
   margin: 0 0 6px;
-  color: #4dd4ca;
+  color: #e8794a;
   font-size: 24px;
   font-weight: 500;
 }
 
 .dashboard-header p {
   margin: 0;
-  color: #999999;
+  color: #a39a90;
   font-size: 14px;
 }
 
@@ -43,18 +43,18 @@
 
 .dashboard-logout {
   padding: 11px 22px;
-  border: 1px solid #ed6227;
+  border: 1px solid #e8794a;
   border-radius: 30px;
   background: transparent;
-  color: #ed6227;
+  color: #e8794a;
   font-size: 15px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .dashboard-logout:hover {
-  background: #ed6227;
-  color: #ffffff;
+  background: #e8794a;
+  color: #f4efe9;
 }
 
 /* WELCOME SECTION */
@@ -67,14 +67,14 @@
 
 .dashboard-welcome h2 {
   margin: 0 0 16px;
-  color: #ffffff;
+  color: #f4efe9;
   font-size: 38px;
   font-weight: 700;
 }
 
 .dashboard-welcome p {
   max-width: 650px;
-  color: #b5b5b5;
+  color: #c9c0b5;
   font-size: 19px;
   line-height: 1.7;
 }
@@ -89,7 +89,7 @@
 
 .dashboard-features h2 {
   margin: 0 0 24px;
-  color: #ffffff;
+  color: #f4efe9;
   font-size: 25px;
 }
 
@@ -111,11 +111,11 @@
   min-height: 225px;
   padding: 28px;
 
-  background: #1b1b1b;
-  border: 1px solid #393939;
+  background: #221f1c;
+  border: 1px solid #3a3530;
   border-radius: 14px;
 
-  color: #ffffff;
+  color: #f4efe9;
   text-decoration: none;
 
   transition:
@@ -125,13 +125,13 @@
 }
 
 .dashboard-card:hover {
-  border-color: #ed6227;
+  border-color: #e8794a;
   transform: translateY(-4px);
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
 }
 
 .dashboard-card:focus-visible {
-  outline: 2px solid #4dd4ca;
+  outline: 2px solid #e8794a;
   outline-offset: 3px;
 }
 
@@ -145,8 +145,8 @@
   width: 52px;
   height: 52px;
 
-  background: #292929;
-  border: 1px solid #393939;
+  background: #181614;
+  border: 1px solid #3a3530;
   border-radius: 12px;
 
   font-size: 27px;
@@ -157,13 +157,13 @@
 
 .dashboard-card h3 {
   margin: 0 0 10px;
-  color: #ffffff;
+  color: #f4efe9;
   font-size: 22px;
 }
 
 .dashboard-card p {
   margin: 0;
-  color: #b5b5b5;
+  color: #c9c0b5;
   font-size: 16px;
   line-height: 1.6;
 }
@@ -175,13 +175,13 @@
   margin-top: auto;
   padding-top: 22px;
 
-  color: #ed6227;
+  color: #e8794a;
   font-size: 15px;
   font-weight: 600;
 }
 
 .dashboard-card:hover .dashboard-card-link {
-  color: #fa753f;
+  color: #f08a5c;
 }
 
 /* RESPONSIVE */
@@ -232,3 +232,9 @@
     padding: 23px;
   }
 }
+
+h1,
+h2 {
+  font-family: Georgia, "Times New Roman", serif;
+}
+
