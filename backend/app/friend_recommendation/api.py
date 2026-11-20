@@ -79,7 +79,7 @@ def _format_recommendations(
                 """
                 SELECT id, name
                 FROM users
-                WHERE account_state = 'active' AND id = ANY(%s)
+                WHERE UPPER(account_state) = 'ACTIVE' AND id = ANY(%s)
                 """,
                 (candidate_ids,),
             ).fetchall()
