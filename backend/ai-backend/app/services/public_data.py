@@ -7,6 +7,7 @@ from typing import Any, Callable, Dict, List, Optional
 import requests
 
 from app.models import Media
+from app.security_logging import Event, log_security_event, safe_url
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +48,8 @@ def _language_name(code: str) -> str:
 class PublicDataCollector:
     """Shared retry/logging behavior for public-source collectors."""
 
+    PROVIDER = "unknown"
+
     def __init__(
         self,
         session: Optional[requests.Session] = None,
@@ -72,7 +75,7 @@ class PublicDataCollector:
 
         for attempt in range(1, self.max_attempts + 1):
             try:
-                logger.info("Requesting public data: %s (attempt %s/%s)", url, attempt, self.max_attempts)
+                logger.info("Requesting %s data (attempt %s/%s)", self.PROVIDER, attempt, self.max_attempts)
                 response = self.session.get(
                     url,
                     params=params,
@@ -93,7 +96,7 @@ class PublicDataCollector:
                     logger.warning(
                         "Retryable response %s from %s; retrying in %.2f seconds",
                         response.status_code,
-                        url,
+                        safe_url(url),
                         delay,
                     )
                     self.sleep_fn(delay)
@@ -108,11 +111,25 @@ class PublicDataCollector:
             except requests.RequestException as exc:
                 last_error = exc
                 if attempt == self.max_attempts:
-                    logger.error("Public data request failed after %s attempts: %s", self.max_attempts, exc)
+                    response = getattr(exc, "response", None)
+                    log_security_event(
+                        Event.EXTERNAL_API_FAILURE,
+                        f"{self.PROVIDER} request failed after {self.max_attempts} attempts",
+                        component="public-data",
+                        level=logging.ERROR,
+                        status_code=getattr(response, "status_code", None),
+                        reason=type(exc).__name__,
+                        provider=self.PROVIDER,
+                    )
                     raise
 
                 delay = self.backoff_seconds * (2 ** (attempt - 1))
-                logger.warning("Public data request error: %s; retrying in %.2f seconds", exc, delay)
+                logger.warning(
+                    "%s request error (%s); retrying in %.2f seconds",
+                    self.PROVIDER,
+                    type(exc).__name__,
+                    delay,
+                )
                 self.sleep_fn(delay)
 
         if last_error:
@@ -121,6 +138,7 @@ class PublicDataCollector:
 
 
 class TVMazeCollector(PublicDataCollector):
+    PROVIDER = "tvmaze"
     BASE_URL = "https://api.tvmaze.com/search/shows"
 
     def collect(self, query: str = "star", limit: int = 10) -> List[Media]:
@@ -180,6 +198,7 @@ class TVMazeCollector(PublicDataCollector):
 
 
 class OpenLibraryCollector(PublicDataCollector):
+    PROVIDER = "open_library"
     BASE_URL = "https://openlibrary.org/search.json"
     DEFAULT_FIELDS = "key,title,subject,language,ratings_average,edition_count"
 

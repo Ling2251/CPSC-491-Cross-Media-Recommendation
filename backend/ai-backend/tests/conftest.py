@@ -12,6 +12,12 @@ def jwt_secret(monkeypatch):
     return TEST_JWT_SECRET
 
 
+@pytest.fixture(autouse=True)
+def isolate_from_ambient_database(monkeypatch):
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    monkeypatch.delenv("DEMO_MODE", raising=False)
+
+
 @pytest.fixture
 def make_token():
     def _make(user_id, secret=TEST_JWT_SECRET, expires_in=3600, algorithm="HS256", extra=None):

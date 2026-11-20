@@ -11,6 +11,7 @@ import FriendSuggestionsPage from "./pages/FriendSuggestionsPage";
 import ActivityFeedPage from "./pages/ActivityFeed/ActivityFeedPage";
 import MediaForumPage from "./pages/MediaForum/MediaForumPage";
 import DiscoverPage from "./pages/DiscoverPage";
+import AiRecommendationsPage from "./pages/AiRecommendations/AiRecommendationsPage";
 import AppHeader from "./components/AppHeader";
 import {
   clearAuthSession,
@@ -158,6 +159,11 @@ function App() {
         <Route
           path="/discover"
           element={<DiscoverPage isAuthenticated={Boolean(user)} />}
+        />
+
+        <Route
+          path="/ai-recommendations"
+          element={<AiRecommendationsPage />}
         />
 
         <Route path="/signup" element={<Signup />} />

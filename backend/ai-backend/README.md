@@ -311,3 +311,20 @@ Set JWT_SECRET in your environment, for example in a local .env file that is not
 /health and /generate stay public. /generate only returns generated dummy data.
 
 Tests set a throwaway secret through tests/conftest.py, so no real secret is needed to run them.
+
+## Saved preferences and the recommendation page
+
+With DATABASE_URL set, the backend stores each user's preferences in the user_preferences table and serves recommendations from the database. Without it, the original in-memory dummy data is used.
+
+- GET /preferences/{user_id}: returns the saved preferences (404 if none, 503 if the database is not configured or unreachable).
+- PUT /preferences/{user_id}: saves preferences after validation. Both endpoints require the owner's JWT, as /recommend does.
+- Recommendations rank media by genres (2 points per matched genre). Rated and consumed media are excluded. Only the selected content types are considered.
+- Languages are stored but do not affect ranking yet, because media has no language data.
+
+Environment variables:
+
+- DATABASE_URL: PostgreSQL connection string. Never commit a real value.
+- AI_CORS_ORIGINS: comma-separated frontend origins (default http://localhost:5173).
+- TEST_DATABASE_URL: used only by the database tests. Without it those tests are skipped. CI provides a PostgreSQL service.
+
+The frontend page is at /ai-recommendations in frontend/. It reads the login token from localStorage and calls the backend at VITE_AI_API_URL (default http://localhost:8000).
