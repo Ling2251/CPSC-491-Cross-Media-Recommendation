@@ -1,4 +1,4 @@
-.ai-page {
+﻿.ai-page {
   --ai-bg: #181614;
   --ai-surface: #221f1c;
   --ai-border: #3a3530;
@@ -107,7 +107,7 @@
 .ai-preferences label:not(.ai-field):has(input:checked) {
   background: var(--ai-accent-strong);
   border-color: var(--ai-accent-strong);
-  color: #fff;
+  color: #f4efe9;
 }
 
 .ai-preferences label:not(.ai-field):has(input:focus-visible) {
@@ -251,3 +251,4 @@
     padding: 36px 20px 56px;
   }
 }
+

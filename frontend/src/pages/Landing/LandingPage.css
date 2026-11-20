@@ -1,11 +1,11 @@
-
+﻿
 /* LANDING PAGE */
 
 .auth-landing {
   min-height: 100vh;
-  background: #292929;
-  color: #ffffff;
-  font-family: Arial, Helvetica, sans-serif;
+  background: #181614;
+  color: #f4efe9;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 }
 
 .auth-landing * {
@@ -26,7 +26,7 @@
   display: flex;
   align-items: center;
   padding: 65px 53px;
-  border-right: 1px solid #373737;
+  border-right: 1px solid #3a3530;
 }
 
 .auth-intro-content {
@@ -41,7 +41,7 @@
 }
 
 .auth-description {
-  color: #999999;
+  color: #a39a90;
   font-size: 20px;
   line-height: 1.75;
   margin: 0 0 35px;
@@ -58,7 +58,7 @@
 }
 
 .auth-benefits li {
-  color: #b5b5b5;
+  color: #c9c0b5;
   font-size: 18px;
   display: flex;
   align-items: center;
@@ -72,7 +72,7 @@
   height: 14px;
   flex-shrink: 0;
   border-radius: 50%;
-  background: #ed6227;
+  background: #e8794a;
 }
 
 /* RIGHT PANEL */
@@ -92,7 +92,7 @@
 
 .auth-tabs {
   display: flex;
-  border-bottom: 1px solid #383838;
+  border-bottom: 1px solid #3a3530;
   margin-bottom: 33px;
   gap: 0;
 }
@@ -102,7 +102,7 @@
   background: transparent;
   border: 0;
   border-bottom: 3px solid transparent;
-  color: #999999;
+  color: #a39a90;
   cursor: pointer;
   padding: 0 33px 15px;
   font-size: 20px;
@@ -111,15 +111,15 @@
 .auth-tabs button.active,
 .auth-tabs .auth-tab-link {
   border-bottom: 3px solid transparent;
-  color: #999999;
+  color: #a39a90;
   cursor: pointer;
   padding: 0 33px 15px;
   font-size: 20px;
 }
 
 .auth-tabs button.active {
-  color: #ffffff;
-  border-bottom-color: #ed6227;
+  color: #f4efe9;
+  border-bottom-color: #e8794a;
 }
 
 .auth-tabs .auth-tab-link {
@@ -130,7 +130,7 @@
 
 .auth-tabs button:hover,
 .auth-tabs .auth-tab-link:hover {
-  color: #ffffff;
+  color: #f4efe9;
 }
 
 /* INPUT FIELDS */
@@ -141,7 +141,7 @@
 
 .auth-field label {
   display: block;
-  color: #999999;
+  color: #a39a90;
   font-size: 17px;
   margin-bottom: 8px;
 }
@@ -150,21 +150,21 @@
   display: block;
   width: 100%;
   height: 53px;
-  background: #121212;
-  border: 2px solid #393939;
+  background: #221f1c;
+  border: 2px solid #3a3530;
   border-radius: 11px;
   padding: 0 17px;
   font-size: 19px;
-  color: #ffffff;
+  color: #f4efe9;
   outline: none;
 }
 
 .auth-field input::placeholder {
-  color: #535353;
+  color: #5c544c;
 }
 
 .auth-field input:focus {
-  border-color: #ed6227;
+  border-color: #e8794a;
 }
 
 /* FORGOT PASSWORD */
@@ -172,7 +172,7 @@
 .auth-forgot {
   display: flex;
   justify-content: flex-end;
-  color: #ed6227;
+  color: #e8794a;
   margin: 4px 0 24px;
   font-size: 16px;
 }
@@ -183,7 +183,7 @@
   display: block;
   width: 100%;
   min-height: 59px;
-  background: #ed6227;
+  background: #e8794a;
   border: 0;
   border-radius: 35px;
   color: white;
@@ -194,7 +194,7 @@
 }
 
 .auth-submit:hover {
-  background: #fa753f;
+  background: #f08a5c;
 }
 
 .auth-explore-link {
@@ -203,8 +203,8 @@
   gap: 8px;
   margin-top: 32px;
   padding: 11px 16px;
-  color: #f28a58;
-  border: 1px solid #76503e;
+  color: #f08a5c;
+  border: 1px solid #2c211c;
   border-radius: 24px;
   font-size: 14px;
   font-weight: 600;
@@ -212,19 +212,19 @@
 }
 
 .auth-explore-link:hover {
-  background: #38261f;
-  border-color: #ed6227;
+  background: #2c211c;
+  border-color: #e8794a;
 }
 
 .auth-explore-link:focus-visible,
 .auth-tabs a:focus-visible,
 .auth-tabs button:focus-visible {
-  outline: 2px solid #ffb28e;
+  outline: 2px solid #f08a5c;
   outline-offset: 3px;
 }
 
 .auth-message {
-  color: #ffc29f;
+  color: #f5c9ae;
   margin: 15px 0;
   line-height: 1.5;
   font-size: 14px;
@@ -237,7 +237,7 @@
   align-items: center;
   gap: 15px;
   margin: 40px 0 27px;
-  color: #777777;
+  color: #8a8178;
   font-size: 16px;
 }
 
@@ -246,7 +246,7 @@
   content: "";
   flex: 1;
   height: 1px;
-  background: #393939;
+  background: #3a3530;
 }
 
 /* SOCIAL LOGIN */
@@ -259,10 +259,10 @@
 
 .auth-social-buttons button {
   height: 53px;
-  background: #121212;
-  border: 2px solid #373737;
+  background: #221f1c;
+  border: 2px solid #3a3530;
   border-radius: 10px;
-  color: #999999;
+  color: #a39a90;
   font-size: 19px;
 }
 
@@ -276,13 +276,13 @@
 .auth-legal {
   text-align: center;
   font-size: 14px;
-  color: #777777;
+  color: #8a8178;
   margin-top: 26px;
   line-height: 1.6;
 }
 
 .auth-legal span {
-  color: #ed6227;
+  color: #e8794a;
 }
 
 /* RESPONSIVE DESIGN */
@@ -295,7 +295,7 @@
   .auth-intro {
     padding: 55px 35px;
     border-right: 0;
-    border-bottom: 1px solid #373737;
+    border-bottom: 1px solid #3a3530;
   }
 
   .auth-intro-content {
@@ -338,3 +338,9 @@
     font-size: 17px;
   }
 }
+
+h1,
+h2 {
+  font-family: Georgia, "Times New Roman", serif;
+}
+

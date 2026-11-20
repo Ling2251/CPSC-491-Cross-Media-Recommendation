@@ -8,6 +8,7 @@ const NAV_ITEMS = [
   { label: "Suggestions", to: "/suggestions" },
   { label: "Activity", to: "/activity-feed" },
   { label: "Forum", to: "/media-forum/1" },
+  { label: "AI Recommendations", to: "/ai-recommendations" },
 ];
 
 export default function AppHeader({ onLogout }) {

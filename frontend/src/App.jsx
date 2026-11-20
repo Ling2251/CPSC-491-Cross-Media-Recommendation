@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 
 import LandingPage from "./pages/Landing/LandingPage.jsx";
 import Dashboard from "./pages/Dashboard";
@@ -23,6 +23,7 @@ const API_BASE_URL =
 
 function App() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [user, setUser] = useState(null);
   const [checkingSession, setCheckingSession] = useState(true);
 
@@ -122,7 +123,7 @@ function App() {
 
   return (
     <>
-      {user && !checkingSession && (
+      {(user || location.pathname === "/ai-recommendations") && !checkingSession && (
         <AppHeader onLogout={handleLogout} />
       )}
       <Routes>

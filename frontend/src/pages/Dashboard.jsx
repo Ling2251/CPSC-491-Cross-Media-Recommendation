@@ -10,6 +10,12 @@ const features = [
     icon: "✨",
   },
   {
+    title: "AI Recommendations",
+    description: "Get movie picks ranked from your preferences.",
+    path: "/ai-recommendations",
+    icon: "🤖",
+  },
+  {
     title: "Friends",
     description: "Manage friends and friend requests.",
     path: "/friends",
