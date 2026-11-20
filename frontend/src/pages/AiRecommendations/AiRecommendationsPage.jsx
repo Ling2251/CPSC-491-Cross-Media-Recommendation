@@ -29,9 +29,14 @@ function toggleValue(list, value) {
   return list.includes(value) ? list.filter((item) => item !== value) : [...list, value];
 }
 
+const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === "true";
+const DEMO_USER_ID = 1;
+
 function AiRecommendationsPage() {
   const [token] = useState(getStoredToken);
-  const [userId] = useState(() => userIdFromToken(getStoredToken()));
+  const [userId] = useState(() =>
+    DEMO_MODE ? DEMO_USER_ID : userIdFromToken(getStoredToken())
+  );
   const [preferences, setPreferences] = useState(DEFAULT_PREFERENCES);
   const [recommendations, setRecommendations] = useState([]);
   const [hasSavedPreferences, setHasSavedPreferences] = useState(false);
@@ -44,7 +49,7 @@ function AiRecommendationsPage() {
   }
 
   useEffect(() => {
-    if (!token || userId === null) {
+    if (userId === null) {
       return;
     }
 
@@ -106,7 +111,7 @@ function AiRecommendationsPage() {
     }
   }
 
-  if (!token || userId === null) {
+  if (userId === null) {
     return (
       <main className="ai-page">
         <h1>AI Recommendations</h1>
@@ -118,7 +123,13 @@ function AiRecommendationsPage() {
 
   return (
     <main className="ai-page">
-      <h1>AI Recommendations</h1>
+      <header className="ai-hero">
+        <p className="ai-eyebrow">Your next favorite thing</p>
+        <h1>AI Recommendations</h1>
+        <p className="ai-subtitle">
+          Pick the genres, languages, and formats you love, and get movies ranked for you.
+        </p>
+      </header>
 
       <form className="ai-preferences" onSubmit={handleSubmit}>
         <fieldset>
@@ -179,7 +190,7 @@ function AiRecommendationsPage() {
           ))}
         </fieldset>
 
-        <label>
+        <label className="ai-field">
           Minimum rating
           <input
             type="number"
@@ -193,7 +204,7 @@ function AiRecommendationsPage() {
           />
         </label>
 
-        <label>
+        <label className="ai-field">
           <input
             type="checkbox"
             checked={preferences.discovery_interest}
@@ -211,7 +222,7 @@ function AiRecommendationsPage() {
 
       {message && <p role="status" className="ai-message">{message}</p>}
 
-      <section aria-label="Recommendations">
+      <section className="ai-results-section" aria-label="Recommendations">
         <h2>Recommended for you</h2>
         {busy && <p>Loading...</p>}
         {!busy && !hasSavedPreferences && <p>Save your preferences to see recommendations.</p>}

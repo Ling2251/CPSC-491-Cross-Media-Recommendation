@@ -45,7 +45,7 @@ function messageFromError(data, status) {
 }
 
 async function request(path, { method = "GET", token, body } = {}) {
-  const headers = { Authorization: `Bearer ${token}` };
+  const headers = token ? { Authorization: `Bearer ${token}` } : {};
   if (body !== undefined) {
     headers["Content-Type"] = "application/json";
   }

@@ -76,6 +76,14 @@ describe("aiRecommendationApi", () => {
     );
   });
 
+  it("omits the Authorization header when no token is provided (demo mode)", async () => {
+    fetch.mockResolvedValue(jsonResponse(200, { user_id: 1, recommendations: [] }));
+
+    await aiRecommendationApi.getRecommendations(1, null);
+
+    expect(fetch.mock.calls[0][1].headers).toEqual({});
+  });
+
   it("builds the recommendation URL with top_n", async () => {
     fetch.mockResolvedValue(jsonResponse(200, { user_id: 7, recommendations: [] }));
 
