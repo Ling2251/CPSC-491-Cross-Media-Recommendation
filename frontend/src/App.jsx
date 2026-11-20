@@ -9,6 +9,8 @@ import Login from "./pages/Login";
 import Onboarding from "./pages/Onboarding";
 import Signup from "./pages/Signup";
 import FriendSuggestionsPage from "./pages/FriendSuggestionsPage";
+import MediaCatalog from "./pages/MediaCatalog";
+import MediaDetail from "./pages/MediaDetail";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -75,6 +77,16 @@ function App() {
       <Route
         path="/signup"
         element={<Signup />}
+      />
+
+      <Route
+        path="/media"
+        element={<MediaCatalog />}
+      />
+
+      <Route
+        path="/media/:id"
+        element={<MediaDetail />}
       />
 
       <Route
