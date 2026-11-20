@@ -45,10 +45,20 @@ def _jwt_secret(request: Request) -> str:
     return secret
 
 
+def _demo_user_id() -> Optional[int]:
+    if os.environ.get("DEMO_MODE", "").lower() not in ("1", "true", "yes"):
+        return None
+    return int(os.environ.get("DEMO_USER_ID", "1"))
+
+
 def get_current_user_id(
     request: Request,
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(_bearer),
 ) -> int:
+    if credentials is None:
+        demo_user = _demo_user_id()
+        if demo_user is not None:
+            return demo_user
     if credentials is None or credentials.scheme.lower() != "bearer":
         raise _reject(request, "missing_token", "Authentication required")
 
