@@ -6,6 +6,7 @@ const pool = require("./db");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const friendshipRoutes = require("./routes/friendshipRoutes");
+const mediaRoutes = require("./routes/mediaRoutes");
 
 const app = express();
 const PORT = 3001;
@@ -20,6 +21,9 @@ app.use(express.json());
 
 // Friendship API
 app.use("/api/friends", friendshipRoutes);
+
+// Media catalog API
+app.use("/api/media", mediaRoutes);
 
 // Middleware to verify JWT authentication
 function authenticateToken(req, res, next) {
