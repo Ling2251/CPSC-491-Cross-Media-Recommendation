@@ -8,6 +8,8 @@ import Login from "./pages/Login";
 import Onboarding from "./pages/Onboarding";
 import Signup from "./pages/Signup";
 import FriendSuggestionsPage from "./pages/FriendSuggestionsPage";
+import MediaCatalog from "./pages/MediaCatalog";
+import MediaDetail from "./pages/MediaDetail";
 import ActivityFeedPage from "./pages/ActivityFeed/ActivityFeedPage";
 import MediaForumPage from "./pages/MediaForum/MediaForumPage";
 import DiscoverPage from "./pages/DiscoverPage";
@@ -177,6 +179,16 @@ function App() {
         <Route
           path="/media-forum/:mediaId"
           element={<MediaForumPage />}
+        />
+
+        <Route
+          path="/media"
+          element={<MediaCatalog />}
+        />
+
+        <Route
+          path="/media/:id"
+          element={<MediaDetail />}
         />
 
         <Route

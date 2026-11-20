@@ -54,4 +54,39 @@ async function getEligibleMediaProfile(pool, mediaId) {
   return { ...media, tags };
 }
 
-module.exports = { assignTag, getMediaWithTags, getEligibleMediaProfile };
+// Catalog listing filter: media_type is a plain column filter, while the tag
+// filter must only match approved tags, for the same leak-prevention reason
+// getEligibleMediaProfile above only selects approved tags.
+async function listMediaWithEligibleTagFilter(pool, { mediaType, tagName } = {}) {
+  const conditions = [];
+  const params = [];
+
+  if (mediaType) {
+    params.push(mediaType);
+    conditions.push(`m.media_type = $${params.length}`);
+  }
+
+  if (tagName) {
+    params.push(tagName);
+    conditions.push(`EXISTS (
+      SELECT 1 FROM media_tags mt
+      JOIN tag_taxonomy t ON t.id = mt.tag_id
+      WHERE mt.media_id = m.id AND mt.status = 'approved' AND t.name = $${params.length}
+    )`);
+  }
+
+  const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+
+  const { rows } = await pool.query(
+    `SELECT * FROM media m ${whereClause} ORDER BY m.id`,
+    params,
+  );
+  return rows;
+}
+
+module.exports = {
+  assignTag,
+  getMediaWithTags,
+  getEligibleMediaProfile,
+  listMediaWithEligibleTagFilter,
+};

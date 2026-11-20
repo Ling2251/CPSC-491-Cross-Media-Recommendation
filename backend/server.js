@@ -8,6 +8,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
 const friendshipRoutes = require("./routes/friendshipRoutes");
+const mediaRoutes = require("./routes/mediaRoutes");
 const activityRoutes = require("./routes/activityRoutes");
 const mediaInteractionRoutes = require("./routes/mediaInteractionRoutes");
 const mediaReviewRoutes = require("./routes/mediaReviewRoutes");
@@ -42,6 +43,9 @@ app.use(express.json());
 
 // Friendship Management
 app.use("/api/friends", friendshipRoutes);
+
+// Media catalog API
+app.use("/api/media", mediaRoutes);
 
 // Activity Tracking
 app.use("/api/activities", activityRoutes);

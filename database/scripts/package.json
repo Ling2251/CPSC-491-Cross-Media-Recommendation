@@ -11,6 +11,9 @@
     "test:threshold": "node test-threshold.js",
     "test:candidates": "node test-candidate-generator.js",
     "test:profile": "node test-media-profile.js",
+    "test:catalog": "node test-media-catalog.js",
+    "test:openlibrary": "node test-openlibrary-adapter.js",
+    "test:book-integration": "node test-book-import-integration.js",
     "test:fetch": "node test-tmdb-fetch.js"
   },
   "dependencies": {
